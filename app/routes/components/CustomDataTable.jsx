@@ -6,13 +6,11 @@ export const CustomDataTable = ({ columnType, rows, heading }) => {
     <div style={{ marginTop: "25px" }}>
       <Card>
         <Page title="Products Feed">
-          <LegacyCard>
-            <DataTable
-              columnContentTypes={columnType}
-              headings={heading}
-              rows={rows}
-            />
-          </LegacyCard>
+          <DataTable
+            columnContentTypes={columnType}
+            headings={heading}
+            rows={rows}
+          />
         </Page>
       </Card>
     </div>
