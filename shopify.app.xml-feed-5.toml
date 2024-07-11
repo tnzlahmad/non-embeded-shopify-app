@@ -3,7 +3,7 @@
 client_id = "85c71fbac30688973d09bb53583012f2"
 name = "xml-feed-5"
 handle = "xml-feed-5"
-application_url = "https://accordance-statutes-reynolds-uc.trycloudflare.com"
+application_url = "https://tier-treasure-alive-may.trycloudflare.com"
 embedded = false
 
 [build]
@@ -17,9 +17,9 @@ scopes = ""
 
 [auth]
 redirect_urls = [
-  "https://accordance-statutes-reynolds-uc.trycloudflare.com/auth/callback",
-  "https://accordance-statutes-reynolds-uc.trycloudflare.com/auth/shopify/callback",
-  "https://accordance-statutes-reynolds-uc.trycloudflare.com/api/auth/callback"
+  "https://tier-treasure-alive-may.trycloudflare.com/auth/callback",
+  "https://tier-treasure-alive-may.trycloudflare.com/auth/shopify/callback",
+  "https://tier-treasure-alive-may.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

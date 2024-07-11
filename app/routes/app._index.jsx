@@ -21,8 +21,7 @@ import {
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import logo from "../../app/assets/image/logo.png";
-import {CustomDataTable , CustomCard } from "./components";
-
+import { CustomDataTable, CustomCard } from "./components";
 
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
@@ -115,6 +114,40 @@ export default function Index() {
   }, [productId, shopify]);
   const generateProduct = () => fetcher.submit({}, { method: "POST" });
 
+  const rows = [
+    [
+      "Enterprise Plan",
+      "$150",
+      "Unlimited",
+      "Unlimited",
+      <Button size="large" variant="primary" tone="success">
+        Subscribe
+      </Button>,
+    ],
+    [
+      "Platinum Plan",
+      "$50",
+      "10000	",
+      "Unlimited",
+      <Button size="large" variant="primary" tone="success">
+        Subscribe
+      </Button>,
+    ],
+    [
+      "Enterprise Plan",
+      "$150",
+      "Unlimited",
+      "Unlimited",
+      <Button size="large" variant="primary" tone="success">
+        Subscribe
+      </Button>,
+    ],
+  ];
+
+  const heading = ["Plan", "Price", "Max Product", "No. of feeds", "Subscribe"];
+
+  const columnType = ["text", "numeric", "numeric", "numeric", "numeric"];
+
   return (
     <Page>
       <Card sectioned>
@@ -125,28 +158,42 @@ export default function Index() {
             justifyContent: "space-between",
           }}
         >
-        <Image source={logo} alt="Local logo" style={{ maxWidth: "100px" }} />
+          <Image source={logo} alt="Local logo" style={{ maxWidth: "100px" }} />
           <ButtonGroup>
             <Link url="/app/changePlan">
-              <Button size="large" variant="primary" tone="success">Change Plan</Button>
+              <Button size="large" variant="primary" tone="success">
+                Change Plan
+              </Button>
             </Link>
 
             <Link url="/app/productFeed">
-              <Button size="large" variant="primary" tone="success">Add A Product Feed</Button>
+              <Button size="large" variant="primary" tone="success">
+                Add A Product Feed
+              </Button>
             </Link>
 
             <Link url="/app/editSettings">
-              <Button size="large" variant="primary" tone="success">Edit Settings</Button>
+              <Button size="large" variant="primary" tone="success">
+                Edit Settings
+              </Button>
             </Link>
 
             <Link url="/app/editGoogle">
-              <Button size="large" variant="primary" tone="success">Edit Google</Button>
+              <Button size="large" variant="primary" tone="success">
+                Edit Google
+              </Button>
             </Link>
           </ButtonGroup>
         </div>
       </Card>
-      <CustomCard />
-      <CustomDataTable />
+
+      <CustomCard
+        title="Login Details"
+        leftAccessibility="Currently logged in as: beautygirl-pk"
+        rightAccessibility="Return back to Shopify Admin"
+      />
+
+      <CustomDataTable columnType={columnType} rows={rows} heading={heading} />
 
       {/* <BlockStack gap="500">
         <Layout>
