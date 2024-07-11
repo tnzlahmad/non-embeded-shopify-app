@@ -21,7 +21,7 @@ import {
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import logo from "../../app/assets/image/logo.png";
-import {CustomDataTable } from "./components";
+import {CustomDataTable , CustomCard } from "./components";
 
 
 export const loader = async ({ request }) => {
@@ -128,25 +128,25 @@ export default function Index() {
         <Image source={logo} alt="Local logo" style={{ maxWidth: "100px" }} />
           <ButtonGroup>
             <Link url="/app/changePlan">
-              <Button>Change Plan</Button>
+              <Button size="large" variant="primary" tone="success">Change Plan</Button>
             </Link>
 
             <Link url="/app/productFeed">
-              <Button>Add A Product Feed</Button>
+              <Button size="large" variant="primary" tone="success">Add A Product Feed</Button>
             </Link>
 
             <Link url="/app/editSettings">
-              <Button>Edit Settings</Button>
+              <Button size="large" variant="primary" tone="success">Edit Settings</Button>
             </Link>
 
             <Link url="/app/editGoogle">
-              <Button>Edit Google</Button>
+              <Button size="large" variant="primary" tone="success">Edit Google</Button>
             </Link>
           </ButtonGroup>
         </div>
       </Card>
+      <CustomCard />
       <CustomDataTable />
-      {/* <CustomCard /> */}
 
       {/* <BlockStack gap="500">
         <Layout>
