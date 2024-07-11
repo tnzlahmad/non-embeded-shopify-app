@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 import { useEffect } from "react";
 import { json } from "@remix-run/node";
@@ -15,10 +15,11 @@ import {
   Link,
   InlineStack,
   Image,
-  ButtonGroup
+  ButtonGroup,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
+import logo from "../../app/assets/image/logo.png";
 
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
@@ -113,22 +114,23 @@ export default function Index() {
 
   return (
     <Page>
-    
-    <Card sectioned>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <Image
-        source="./public/headerLogo.png" 
-        alt="Header Logo"
-        style={{ maxWidth: '50px' }} 
-        />
-        <ButtonGroup>
-          <Button>Cancel</Button>
-          <Button primary>Save</Button>
-          <Button primary>Save</Button>
-          <Button primary>Save</Button>
-        </ButtonGroup>
-      </div>
-    </Card>
+      <Card sectioned>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Image source={logo} alt="Local logo" style={{ maxWidth: "100px" }} />
+          <ButtonGroup>
+            <Button>Cancel</Button>
+            <Button primary>Save</Button>
+            <Button primary>Save</Button>
+            <Button primary>Save</Button>
+          </ButtonGroup>
+        </div>
+      </Card>
 
       {/* <BlockStack gap="500">
         <Layout>
