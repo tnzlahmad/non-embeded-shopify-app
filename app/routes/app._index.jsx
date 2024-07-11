@@ -3,7 +3,7 @@ dotenv.config();
 import { useEffect } from "react";
 import { json } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
-import "bootstrap/dist/css/bootstrap.min.css";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 import {
   Page,
@@ -22,7 +22,7 @@ import {
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import logo from "../../app/assets/image/logo.png";
-import { CustomDataTable, CustomCard } from "./components";
+import { CustomDataTable, CustomCard , ProductCatalog , FAQsComponent } from "./components";
 
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
@@ -195,6 +195,9 @@ export default function Index() {
       />
 
       <CustomDataTable columnType={columnType} rows={rows} heading={heading} />
+      <ProductCatalog/>
+      <FAQsComponent/>
+      
 
       {/* <BlockStack gap="500">
         <Layout>
