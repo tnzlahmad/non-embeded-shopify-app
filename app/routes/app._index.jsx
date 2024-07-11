@@ -22,7 +22,7 @@ import {
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import logo from "../../app/assets/image/logo.png";
-import { CustomDataTable, CustomCard , ProductCatalog , FAQsComponent } from "./components";
+import { CustomDataTable, CustomCard , ProductCatalog , FAQsComponent , Header } from "./components";
 
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
@@ -151,43 +151,7 @@ export default function Index() {
 
   return (
     <Page>
-      <Card sectioned>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Image source={logo} alt="Local logo" style={{ maxWidth: "100px" }} />
-          <ButtonGroup>
-            <Link url="/app/changePlan">
-              <Button size="large" variant="primary" tone="success">
-                Change Plan
-              </Button>
-            </Link>
-
-            <Link url="/app/productFeed">
-              <Button size="large" variant="primary" tone="success">
-                Add A Product Feed
-              </Button>
-            </Link>
-
-            <Link url="/app/editSettings">
-              <Button size="large" variant="primary" tone="success">
-                Edit Settings
-              </Button>
-            </Link>
-
-            <Link url="/app/editGoogle">
-              <Button size="large" variant="primary" tone="success">
-                Edit Google
-              </Button>
-            </Link>
-          </ButtonGroup>
-        </div>
-      </Card>
-
+      <Header/>
       <CustomCard
         title="Login Details"
         leftAccessibility="Currently logged in as: beautygirl-pk"

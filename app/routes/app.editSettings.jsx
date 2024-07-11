@@ -1,83 +1,94 @@
-import {
-  Box,
-  Card,
-  Layout,
-  Link,
-  List,
-  Page,
-  Text,
-  BlockStack,
-} from "@shopify/polaris";
-import { TitleBar } from "@shopify/app-bridge-react";
+import React, { useState } from "react";
+import { Container, FormGroup, Label, Input } from "reactstrap";
+import { Page, Layout, Card, Button } from "@shopify/polaris";
+import { Header } from "./components";
 
-export default function AdditionalPage() {
+const editSettings = () => {
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [showTextFields, setShowTextFields] = useState(false);
+
+  const handleOptionChange = (option) => {
+    if (selectedOption === option) {
+      setSelectedOption(null);
+      setShowTextFields(false);
+    } else {
+      setSelectedOption(option);
+      setShowTextFields(option === 2);
+    }
+  };
+
   return (
     <Page>
-      <TitleBar title="Additional page" />
+    <Header/>
       <Layout>
         <Layout.Section>
-          <Card>
-            <BlockStack gap="300">
-              <Text as="p" variant="bodyMd">
-                The app template comes with an additional page which
-                demonstrates how to create multiple pages within app navigation
-                using{" "}
-                <Link
-                  url="https://shopify.dev/docs/apps/tools/app-bridge"
-                  target="_blank"
-                  removeUnderline
-                >
-                  App Bridge
-                </Link>
-                .
-              </Text>
-              <Text as="p" variant="bodyMd">
-                To create your own page and have it show up in the app
-                navigation, add a page inside <Code>app/routes</Code>, and a
-                link to it in the <Code>&lt;NavMenu&gt;</Code> component found
-                in <Code>app/routes/app.jsx</Code>.
-              </Text>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-        <Layout.Section variant="oneThird">
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">
-                Resources
-              </Text>
-              <List>
-                <List.Item>
-                  <Link
-                    url="https://shopify.dev/docs/apps/design-guidelines/navigation#app-nav"
-                    target="_blank"
-                    removeUnderline
+          <Card sectioned>
+            <div style={{ marginBottom: "20px" }}>
+              <h1>Global Settings</h1>
+              <h3>Tax Settings</h3>
+            </div>
+            <Container>
+              <FormGroup check>
+                <Label check>
+                  <Input
+                    type="radio"
+                    name="option"
+                    checked={selectedOption === 1}
+                    onChange={() => handleOptionChange(1)}
+                  />{" "}
+                  Do NOT add tax prices
+                </Label>
+              </FormGroup>
+              <FormGroup check>
+                <Label check>
+                  <Input
+                    type="radio"
+                    name="option"
+                    checked={selectedOption === 2}
+                    onChange={() => handleOptionChange(2)}
+                  />{" "}
+                  Do add tax to prices - set tax rate below
+                </Label>
+              </FormGroup>
+              {showTextFields && (
+                <>
+                  <FormGroup
+                    style={{ display: "flex", justifyContent: "space-between" }}
                   >
-                    App nav best practices
-                  </Link>
-                </List.Item>
-              </List>
-            </BlockStack>
+                    <div style={{ width: "48%" }}>
+                      <Label for="text1">
+                        Tax rate percent (example: if the tax rate is 22%, enter
+                        22)
+                      </Label>
+                      <Input
+                        type="text"
+                        id="text1"
+                        placeholder="Add Tax Percentage%"
+                      />
+                    </div>
+                    <div style={{ width: "48%" }}>
+                      <Label for="text2">
+                        Round & format prices to this number of decimal places
+                        (default: 2)
+                      </Label>
+                      <Input
+                        type="text"
+                        id="text2"
+                        placeholder="Tax Decimal Places"
+                      />
+                    </div>
+                  </FormGroup>
+                </>
+              )}
+              <div style={{ textAlign: "center", marginTop: "20px" }}>
+                <Button primary>Update Settings</Button>
+              </div>
+            </Container>
           </Card>
         </Layout.Section>
       </Layout>
     </Page>
   );
-}
+};
 
-function Code({ children }) {
-  return (
-    <Box
-      as="span"
-      padding="025"
-      paddingInlineStart="100"
-      paddingInlineEnd="100"
-      background="bg-surface-active"
-      borderWidth="025"
-      borderColor="border"
-      borderRadius="100"
-    >
-      <code>{children}</code>
-    </Box>
-  );
-}
+export default editSettings;

@@ -1,83 +1,135 @@
-import {
-  Box,
-  Card,
-  Layout,
-  Link,
-  List,
-  Page,
-  Text,
-  BlockStack,
-} from "@shopify/polaris";
-import { TitleBar } from "@shopify/app-bridge-react";
+import React from "react";
+import { Page, TextField, Card } from "@shopify/polaris";
+import { Container, Row, Col, FormGroup, Label, Input } from "reactstrap";
+import { Header } from "./components";
 
-export default function AdditionalPage() {
-  return (
-    <Page>
-      <TitleBar title="Additional page" />
-      <Layout>
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="300">
-              <Text as="p" variant="bodyMd">
-                The app template comes with an additional page which
-                demonstrates how to create multiple pages within app navigation
-                using{" "}
-                <Link
-                  url="https://shopify.dev/docs/apps/tools/app-bridge"
-                  target="_blank"
-                  removeUnderline
-                >
-                  App Bridge
-                </Link>
-                .
-              </Text>
-              <Text as="p" variant="bodyMd">
-                To create your own page and have it show up in the app
-                navigation, add a page inside <Code>app/routes</Code>, and a
-                link to it in the <Code>&lt;NavMenu&gt;</Code> component found
-                in <Code>app/routes/app.jsx</Code>.
-              </Text>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-        <Layout.Section variant="oneThird">
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">
-                Resources
-              </Text>
-              <List>
-                <List.Item>
-                  <Link
-                    url="https://shopify.dev/docs/apps/design-guidelines/navigation#app-nav"
-                    target="_blank"
-                    removeUnderline
-                  >
-                    App nav best practices
-                  </Link>
-                </List.Item>
-              </List>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-      </Layout>
-    </Page>
-  );
-}
+const radioOption = [
+  {
+    question: "Append currency parameter to product URL?",
+    options: [
+      {
+        label:
+          "Do Not append. (default, example: my-store.com/products/my-product)",
+      },
+      {
+        label:
+          "Do append. (example: my-store.com/products/my-product?currency=USD)",
+      },
+    ],
+  },
+  {
+    question: "All products or some of them?",
+    options: [
+      {
+        label: "All products",
+      },
+      {
+        label: "Products from selected collection",
+      },
+    ],
+  },
+  {
+    question: "Export mode",
+    options: [
+      {
+        label: "Export all variants of a product",
+      },
+      {
+        label: "Export only one variant of a product",
+      },
+    ],
+  },
+  {
+    question: "Use Compare at price:",
+    options: [
+      {
+        label: "Use both 'Compare at price and price' if they exist (default)",
+      },
+      {
+        label:
+          "Don't use 'Compare at' price - only the price field from Shopify will be used in the field",
+      },
+    ],
+  },
+  {
+    question: "Product and variant images",
+    options: [
+      {
+        label:
+          "Use variant's image if it exists and fallback to using product's image",
+      },
+      {
+        label: "Always use product's image (and never use variant's image)",
+      },
+    ],
+  },
+];
 
-function Code({ children }) {
+const labelText = [
+  { text: "Custom Label 0" },
+  { text: "Custom Label 1" },
+  { text: "Custom Label 2" },
+  { text: "Custom Label 3" },
+  { text: "Custom Label 4" },
+];
+
+export default function ChangePlan() {
   return (
-    <Box
-      as="span"
-      padding="025"
-      paddingInlineStart="100"
-      paddingInlineEnd="100"
-      background="bg-surface-active"
-      borderWidth="025"
-      borderColor="border"
-      borderRadius="100"
-    >
-      <code>{children}</code>
-    </Box>
+    <Card sectioned>
+      <Page>
+        <Header />
+        <Container fluid className="mt-4">
+          <Row>
+            <Col md="9" className="custom-section-left">
+              <h2>Add a product feed</h2>
+              <div className="d-flex">
+                <TextField placeholder="Enter Product Feed Name" />
+                <TextField placeholder="Enter Currency (PKR Only)" />
+              </div>
+
+              {radioOption.map((section, index) => (
+                <div key={index} className="mt-4">
+                  <h2>{section.question}</h2>
+                  {section.options.map((option, optIndex) => (
+                    <FormGroup key={optIndex} check className="mb-2">
+                      <Label check>
+                        <Input type="radio" name={`question${index}`} />{" "}
+                        {option.label}
+                      </Label>
+                    </FormGroup>
+                  ))}
+                </div>
+              ))}
+
+              <h2>Add a product feed</h2>
+              <div className="row">
+                {labelText.map((item, index) => (
+                  <div className="col-md-6" key={index}>
+                    <TextField fullWidth placeholder={item.text} />
+                  </div>
+                ))}
+              </div>
+
+              <h2>Custom Numbers</h2>
+              <div className="d-flex">
+                <div className="col-md-6 d-flex">
+                  <TextField fullWidth placeholder="test" />
+                  <TextField fullWidth placeholder="test" />
+                </div>
+              </div>
+
+
+              
+            </Col>
+            <Col md="3" className="custom-section-right">
+              <div>
+                <p>This is your right section content.</p>
+                <p>This is your right section content.</p>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </Page>
+    </Card>
   );
 }
