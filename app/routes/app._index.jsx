@@ -1,8 +1,10 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 import { useEffect } from "react";
 import { json } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 import {
   Page,
   Layout,
@@ -14,9 +16,13 @@ import {
   List,
   Link,
   InlineStack,
+  Image,
+  ButtonGroup,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
+import logo from "../../app/assets/image/logo.png";
+import { CustomDataTable, CustomCard , ProductCatalog , FAQsComponent , Header } from "./components";
 
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
@@ -109,14 +115,55 @@ export default function Index() {
   }, [productId, shopify]);
   const generateProduct = () => fetcher.submit({}, { method: "POST" });
 
+  const rows = [
+    [
+      "Enterprise Plan",
+      "$150",
+      "Unlimited",
+      "Unlimited",
+      <Button size="large" variant="primary" tone="success">
+        Subscribe
+      </Button>,
+    ],
+    [
+      "Platinum Plan",
+      "$50",
+      "10000	",
+      "Unlimited",
+      <Button size="large" variant="primary" tone="success">
+        Subscribe
+      </Button>,
+    ],
+    [
+      "Enterprise Plan",
+      "$150",
+      "Unlimited",
+      "Unlimited",
+      <Button size="large" variant="primary" tone="success">
+        Subscribe
+      </Button>,
+    ],
+  ];
+
+  const heading = ["Plan", "Price", "Max Product", "No. of feeds", "Subscribe"];
+
+  const columnType = ["text", "numeric", "numeric", "numeric", "numeric"];
+
   return (
     <Page>
-      <TitleBar title="Remix app template">
-        <button variant="primary" onClick={generateProduct}>
-          Generate a product
-        </button>
-      </TitleBar>
-      <BlockStack gap="500">
+      <Header/>
+      <CustomCard
+        title="Login Details"
+        leftAccessibility="Currently logged in as: beautygirl-pk"
+        rightAccessibility="Return back to Shopify Admin"
+      />
+
+      <CustomDataTable columnType={columnType} rows={rows} heading={heading} />
+      <ProductCatalog/>
+      <FAQsComponent/>
+      
+
+      {/* <BlockStack gap="500">
         <Layout>
           <Layout.Section>
             <Card>
@@ -327,7 +374,7 @@ export default function Index() {
             </BlockStack>
           </Layout.Section>
         </Layout>
-      </BlockStack>
+      </BlockStack> */}
     </Page>
   );
 }
