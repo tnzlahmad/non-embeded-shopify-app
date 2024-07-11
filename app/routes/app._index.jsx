@@ -3,6 +3,7 @@ dotenv.config();
 import { useEffect } from "react";
 import { json } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
+
 import {
   Page,
   Layout,
@@ -20,6 +21,8 @@ import {
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import logo from "../../app/assets/image/logo.png";
+import {CustomDataTable } from "./components";
+
 
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
@@ -122,15 +125,28 @@ export default function Index() {
             justifyContent: "space-between",
           }}
         >
-          <Image source={logo} alt="Local logo" style={{ maxWidth: "100px" }} />
+        <Image source={logo} alt="Local logo" style={{ maxWidth: "100px" }} />
           <ButtonGroup>
-            <Button>Cancel</Button>
-            <Button primary>Save</Button>
-            <Button primary>Save</Button>
-            <Button primary>Save</Button>
+            <Link url="/app/changePlan">
+              <Button>Change Plan</Button>
+            </Link>
+
+            <Link url="/app/productFeed">
+              <Button>Add A Product Feed</Button>
+            </Link>
+
+            <Link url="/app/editSettings">
+              <Button>Edit Settings</Button>
+            </Link>
+
+            <Link url="/app/editGoogle">
+              <Button>Edit Google</Button>
+            </Link>
           </ButtonGroup>
         </div>
       </Card>
+      <CustomDataTable />
+      {/* <CustomCard /> */}
 
       {/* <BlockStack gap="500">
         <Layout>
