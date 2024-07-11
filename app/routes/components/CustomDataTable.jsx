@@ -3,7 +3,7 @@ import { Page, LegacyCard, DataTable, Card, Button } from "@shopify/polaris";
 
 export const CustomDataTable = ({ columnType, rows, heading }) => {
   return (
-    <div style={{ marginTop: "25px" }}>
+    <div className="mt-3">
       <Card>
         <Page title="Products Feed">
           <DataTable

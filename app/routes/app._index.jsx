@@ -3,6 +3,7 @@ dotenv.config();
 import { useEffect } from "react";
 import { json } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 import {
   Page,

@@ -8,7 +8,7 @@ export const CustomCard = ({
   rightAccessibility,
 }) => {
   return (
-    <div style={{ marginTop: "25px" }}>
+    <div className="mt-4">
       <Card roundedAbove="lg">
         <BlockStack gap="200">
           <Text as="h2" variant="headingLg">
