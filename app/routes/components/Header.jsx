@@ -1,7 +1,7 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Card, ButtonGroup, Button, Link, Image } from "@shopify/polaris";
-import logo from "../../app/assets/image/logo.png";
+import logo from '../../assets/image/logo.png';
 
 export const Header = () => (
   <Card sectioned>
@@ -38,6 +38,11 @@ export const Header = () => (
         <Link url="/app/editGoogle">
           <Button size="large" primary>
             Edit Google
+          </Button>
+        </Link>
+        <Link url="/app/product">
+          <Button size="large" primary>
+            Product
           </Button>
         </Link>
       </ButtonGroup>

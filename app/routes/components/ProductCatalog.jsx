@@ -1,5 +1,5 @@
 import { Page, Grid, LegacyCard, Button, Image } from "@shopify/polaris";
-import logo from "../../app/assets/image/logo.png";
+import logo from '../../assets/image/logo.png';
 import React from "react";
 import '../_index/styles.module.css';
 
