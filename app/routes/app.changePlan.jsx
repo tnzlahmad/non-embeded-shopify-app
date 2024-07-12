@@ -48,6 +48,7 @@ export default function changePlan() {
         columnType={columnType}
         rows={rows}
         heading={heading}
+        title="TEST"
         style={{ marginTop: "20px" }}
       />
     </Page>

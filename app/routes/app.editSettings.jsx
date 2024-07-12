@@ -4,22 +4,10 @@ import { Page, Layout, Card, Button } from "@shopify/polaris";
 import { Header } from "./components";
 
 const editSettings = () => {
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [showTextFields, setShowTextFields] = useState(false);
-
-  const handleOptionChange = (option) => {
-    if (selectedOption === option) {
-      setSelectedOption(null);
-      setShowTextFields(false);
-    } else {
-      setSelectedOption(option);
-      setShowTextFields(option === 2);
-    }
-  };
-
   return (
     <Page>
-    <Header/>
+      <Header />
+      <div className="mt-4">
       <Layout>
         <Layout.Section>
           <Card sectioned>
@@ -30,56 +18,41 @@ const editSettings = () => {
             <Container>
               <FormGroup check>
                 <Label check>
-                  <Input
-                    type="radio"
-                    name="option"
-                    checked={selectedOption === 1}
-                    onChange={() => handleOptionChange(1)}
-                  />{" "}
+                  <Input type="radio" name="option" />
                   Do NOT add tax prices
                 </Label>
               </FormGroup>
               <FormGroup check>
                 <Label check>
-                  <Input
-                    type="radio"
-                    name="option"
-                    checked={selectedOption === 2}
-                    onChange={() => handleOptionChange(2)}
-                  />{" "}
+                  <Input type="radio" name="option" />
                   Do add tax to prices - set tax rate below
                 </Label>
               </FormGroup>
-              {showTextFields && (
-                <>
-                  <FormGroup
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <div style={{ width: "48%" }}>
-                      <Label for="text1">
-                        Tax rate percent (example: if the tax rate is 22%, enter
-                        22)
-                      </Label>
-                      <Input
-                        type="text"
-                        id="text1"
-                        placeholder="Add Tax Percentage%"
-                      />
-                    </div>
-                    <div style={{ width: "48%" }}>
-                      <Label for="text2">
-                        Round & format prices to this number of decimal places
-                        (default: 2)
-                      </Label>
-                      <Input
-                        type="text"
-                        id="text2"
-                        placeholder="Tax Decimal Places"
-                      />
-                    </div>
-                  </FormGroup>
-                </>
-              )}
+              <FormGroup
+                style={{ display: "flex", justifyContent: "space-between" }}
+              >
+                <div style={{ width: "48%" }}>
+                  <Label for="text1">
+                    Tax rate percent (example: if the tax rate is 22%, enter 22)
+                  </Label>
+                  <Input
+                    type="text"
+                    id="text1"
+                    placeholder="Add Tax Percentage%"
+                  />
+                </div>
+                <div style={{ width: "48%" }}>
+                  <Label for="text2">
+                    Round & format prices to this number of decimal places
+                    (default: 2)
+                  </Label>
+                  <Input
+                    type="text"
+                    id="text2"
+                    placeholder="Tax Decimal Places"
+                  />
+                </div>
+              </FormGroup>
               <div style={{ textAlign: "center", marginTop: "20px" }}>
                 <Button primary>Update Settings</Button>
               </div>
@@ -87,6 +60,7 @@ const editSettings = () => {
           </Card>
         </Layout.Section>
       </Layout>
+      </div>
     </Page>
   );
 };

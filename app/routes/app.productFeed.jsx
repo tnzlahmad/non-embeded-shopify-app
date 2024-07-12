@@ -1,135 +1,82 @@
 import React from "react";
-import { Page, TextField, Card } from "@shopify/polaris";
-import { Container, Row, Col, FormGroup, Label, Input } from "reactstrap";
-import { Header } from "./components";
-
-const radioOption = [
-  {
-    question: "Append currency parameter to product URL?",
-    options: [
-      {
-        label:
-          "Do Not append. (default, example: my-store.com/products/my-product)",
-      },
-      {
-        label:
-          "Do append. (example: my-store.com/products/my-product?currency=USD)",
-      },
-    ],
-  },
-  {
-    question: "All products or some of them?",
-    options: [
-      {
-        label: "All products",
-      },
-      {
-        label: "Products from selected collection",
-      },
-    ],
-  },
-  {
-    question: "Export mode",
-    options: [
-      {
-        label: "Export all variants of a product",
-      },
-      {
-        label: "Export only one variant of a product",
-      },
-    ],
-  },
-  {
-    question: "Use Compare at price:",
-    options: [
-      {
-        label: "Use both 'Compare at price and price' if they exist (default)",
-      },
-      {
-        label:
-          "Don't use 'Compare at' price - only the price field from Shopify will be used in the field",
-      },
-    ],
-  },
-  {
-    question: "Product and variant images",
-    options: [
-      {
-        label:
-          "Use variant's image if it exists and fallback to using product's image",
-      },
-      {
-        label: "Always use product's image (and never use variant's image)",
-      },
-    ],
-  },
-];
-
-const labelText = [
-  { text: "Custom Label 0" },
-  { text: "Custom Label 1" },
-  { text: "Custom Label 2" },
-  { text: "Custom Label 3" },
-  { text: "Custom Label 4" },
-];
+import { Page, Card } from "@shopify/polaris";
+import { Row, Col } from "reactstrap";
+import { Header, TextFields, CheckBox, SelectBox } from "./components";
 
 export default function ChangePlan() {
   return (
-    <Card sectioned>
-      <Page>
-        <Header />
-        <Container fluid className="mt-4">
+    <Page>
+      <Header />
+      <div className="mt-4">
+        <Card>
           <Row>
-            <Col md="9" className="custom-section-left">
-              <h2>Add a product feed</h2>
-              <div className="d-flex">
-                <TextField placeholder="Enter Product Feed Name" />
-                <TextField placeholder="Enter Currency (PKR Only)" />
-              </div>
-
-              {radioOption.map((section, index) => (
-                <div key={index} className="mt-4">
-                  <h2>{section.question}</h2>
-                  {section.options.map((option, optIndex) => (
-                    <FormGroup key={optIndex} check className="mb-2">
-                      <Label check>
-                        <Input type="radio" name={`question${index}`} />{" "}
-                        {option.label}
-                      </Label>
-                    </FormGroup>
-                  ))}
-                </div>
-              ))}
-
-              <h2>Add a product feed</h2>
+            {/* Left Section */}
+            <Col md="9">
+              {/* TextField */}
               <div className="row">
-                {labelText.map((item, index) => (
-                  <div className="col-md-6" key={index}>
-                    <TextField fullWidth placeholder={item.text} />
-                  </div>
-                ))}
+                <h1>Add a product feed</h1>
+                <TextFields
+                  placeholder="Enter Product Feed Name"
+                  type="text"
+                  name=""
+                  classColMd="col-md-6"
+                />
+                <TextFields
+                  placeholder="Enter Currency (PKR Only)"
+                  type="text"
+                  name=""
+                  classColMd="col-md-6"
+                />
               </div>
 
-              <h2>Custom Numbers</h2>
-              <div className="d-flex">
-                <div className="col-md-6 d-flex">
-                  <TextField fullWidth placeholder="test" />
-                  <TextField fullWidth placeholder="test" />
-                </div>
+              {/* CheckBox */}
+              <div className="mt-3">
+                <CheckBox
+                  title="Append currency parameter to product URL?"
+                  labelOne="Do Not append. (default, example: my-store.com/products/my-product)"
+                  labelTwo="Do append. (example: my-store.com/products/my-product?currency=USD)"
+                  name="CheckBox1"
+                />
+              </div>
+              <div className="mt-3">
+                <CheckBox
+                  title="All products or some of them?"
+                  labelOne="All products"
+                  labelTwo="Products from selected collection"
+                  name="CheckBox2"
+                />
+              </div>
+              {/* Text Box */}
+              <div className="row">
+                <h1>Another Text Box</h1>
+                <TextFields
+                  placeholder="Text Field"
+                  type="text"
+                  name=""
+                  classColMd="col-md-6"
+                />
+                <TextFields
+                  placeholder="Text Field"
+                  type="text"
+                  name=""
+                  classColMd="col-md-6"
+                />
               </div>
 
-
-              
+              {/* Select Box */}
+              <SelectBox title="Select Box" classColMd="col-md-12" />
             </Col>
-            <Col md="3" className="custom-section-right">
+
+            {/* Right Section */}
+            <Col md="3">
               <div>
                 <p>This is your right section content.</p>
                 <p>This is your right section content.</p>
               </div>
             </Col>
           </Row>
-        </Container>
-      </Page>
-    </Card>
+        </Card>
+      </div>
+    </Page>
   );
 }

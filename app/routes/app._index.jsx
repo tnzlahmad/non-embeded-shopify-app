@@ -158,7 +158,7 @@ export default function Index() {
         rightAccessibility="Return back to Shopify Admin"
       />
 
-      <CustomDataTable columnType={columnType} rows={rows} heading={heading} />
+      <CustomDataTable columnType={columnType} rows={rows} heading={heading} title="About" />
       <ProductCatalog/>
       <FAQsComponent/>
       
