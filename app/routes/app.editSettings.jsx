@@ -12,8 +12,8 @@ const editSettings = () => {
         <Layout.Section>
           <Card sectioned>
             <div style={{ marginBottom: "20px" }}>
-              <h1>Global Settings</h1>
-              <h3>Tax Settings</h3>
+              <h5>Global Settings</h5>
+              <h6>Tax Settings</h6>
             </div>
             <Container>
               <FormGroup check>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Page, Card } from "@shopify/polaris";
+import { Page, Card , Text } from "@shopify/polaris";
 import { Row, Col } from "reactstrap";
 import { Header, TextFields, CheckBox, SelectBox } from "./components";
 
@@ -14,7 +14,7 @@ export default function ChangePlan() {
             <Col md="9">
               {/* TextField */}
               <div className="row">
-                <h1>Add a product feed</h1>
+              <Text as="h4" variant="headingLg">Add a product feed</Text>
                 <TextFields
                   placeholder="Enter Product Feed Name"
                   type="text"
@@ -31,16 +31,16 @@ export default function ChangePlan() {
 
               {/* CheckBox */}
               <div className="mt-3">
+              <h5>Append currency parameter to product URL?</h5>
                 <CheckBox
-                  title="Append currency parameter to product URL?"
                   labelOne="Do Not append. (default, example: my-store.com/products/my-product)"
                   labelTwo="Do append. (example: my-store.com/products/my-product?currency=USD)"
                   name="CheckBox1"
                 />
               </div>
               <div className="mt-3">
+              <h5>All products or some of them?</h5>
                 <CheckBox
-                  title="All products or some of them?"
                   labelOne="All products"
                   labelTwo="Products from selected collection"
                   name="CheckBox2"
@@ -48,7 +48,7 @@ export default function ChangePlan() {
               </div>
               {/* Text Box */}
               <div className="row">
-                <h1>Another Text Box</h1>
+                <h5>Another Text Box</h5>
                 <TextFields
                   placeholder="Text Field"
                   type="text"
@@ -64,7 +64,10 @@ export default function ChangePlan() {
               </div>
 
               {/* Select Box */}
-              <SelectBox title="Select Box" classColMd="col-md-12" />
+              <div className="row mt-3">
+              <h5>Select Box</h5>
+              <SelectBox classColMd="col-md-12" />
+              </div>
             </Col>
 
             {/* Right Section */}

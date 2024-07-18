@@ -5,7 +5,7 @@ const options = [1, 2, 3, 4, 5];
 
 export const SelectBox = ({ title, classColMd }) => {
   return (
-    <div className={` mt-3 ${classColMd}`}>
+    <div className={`${classColMd}`}>
       <FormGroup>
         <Label for="testSelect">{title}</Label>
         <Input id="testSelect" name="select" type="select">

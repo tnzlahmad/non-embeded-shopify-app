@@ -1,5 +1,5 @@
 import { Page, Button } from "@shopify/polaris";
-import { CustomDataTable, CustomCard , Header } from "./components";
+import { CustomDataTable, CustomCard , Header} from "./components";
 
 const heading = ["Plan", "Price", "Max Product", "No. of feeds", "Subscribe"];
 const columnType = ["text", "numeric", "numeric", "numeric", "numeric"];
@@ -48,8 +48,8 @@ export default function changePlan() {
         columnType={columnType}
         rows={rows}
         heading={heading}
-        title="TEST"
-        style={{ marginTop: "20px" }}
+        title="Title"
+        style={{ marginTop: "0px" }}
       />
     </Page>
   );
