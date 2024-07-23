@@ -3,7 +3,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Card, ButtonGroup, Button, Link, Image } from "@shopify/polaris";
 import logo from '../../assets/image/logo.png';
 
-export const Header = () => (
+export const Header = ({ handleSync }) => (
   <Card sectioned>
     <div
       style={{
@@ -45,6 +45,7 @@ export const Header = () => (
             Product
           </Button>
         </Link>
+        <Button onClick={handleSync}>Sync</Button>
       </ButtonGroup>
     </div>
   </Card>

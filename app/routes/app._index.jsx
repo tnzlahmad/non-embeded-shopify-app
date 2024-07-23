@@ -2,26 +2,23 @@
 // dotenv.config();
 import { useEffect, useState } from "react";
 import { json } from "@remix-run/node";
-import { useFetcher, useLoaderData , useSubmit } from "@remix-run/react";
+import { useFetcher, useLoaderData, useSubmit } from "@remix-run/react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Page, Button, IndexTable, ButtonGroup } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
-import {saveProducts} from "../utitls/product.server";
-import {
-  CustomDataTable,
-  CustomCard,
-  ProductCatalog,
-  FAQsComponent,
-  Header,
-} from "./components";
+import { saveProducts } from "../utitls/product.server";
+import { ProductCatalog, FAQsComponent, Header } from "./components";
 import prisma from "../db.server";
+import eyeIcon from "../assets/image/eye.svg";
+import { parse } from "js2xmlparser";
 
 export async function loader({ request }) {
   const { admin, session } = await authenticate.admin(request);
   const data = await admin.rest.resources.Product.all({ session });
   const shopName = session.shop;
   const productFieldsData = await prisma.productFields.findMany();
-  return json({ shopName, productFieldsData, data });
+  const productData = await prisma.product.findMany();
+  return json({ shopName, productFieldsData, data, productData });
 }
 
 export const action = async ({ request }) => {
@@ -50,9 +47,19 @@ async function syncProducts(request) {
   return json({ message: "Products synced successfully" });
 }
 
+async function generateXML(products) {
+  try {
+    const xml = parse("Products", { Product: products });
+    return xml;
+  } catch (error) {
+    console.error("Error generating XML:", error);
+    throw error;
+  }
+}
+
 export default function Index() {
   const itemsPerPage = 5;
-  const { shopName, productFieldsData } = useLoaderData();
+  const { shopName, productFieldsData, productData } = useLoaderData();
   const [currentPage, setCurrentPage] = useState(1);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -77,6 +84,24 @@ export default function Index() {
     fetcher.submit(formData, { method: "post" });
   };
 
+  async function handleXML() {
+    if (!productData || productData.length === 0) {
+      alert("No data found in the database");
+      return;
+    }
+
+    try {
+      const xml = await generateXML(productData);
+
+      const blob = new Blob([xml], { type: "application/xml" });
+      const url = URL.createObjectURL(blob);
+
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error("Error generating XML:", error);
+    }
+  }
+
   // Generate rows for IndexTable
   const rowMarkup = currentItems.map(({ image, id, feedName }, index) => (
     <IndexTable.Row id={id} key={id} position={index}>
@@ -91,7 +116,9 @@ export default function Index() {
       <IndexTable.Cell>{feedName}</IndexTable.Cell>
       <IndexTable.Cell>
         <ButtonGroup>
-          <Button>Edit</Button>
+          <Button type="button" onClick={handleXML}>
+            <img src={eyeIcon} alt="Eye Icon" width={15} />
+          </Button>
           <Button type="button" onClick={() => handleDelete(id)}>
             Delete
           </Button>
@@ -102,10 +129,8 @@ export default function Index() {
 
   return (
     <Page>
-      <Header />
-
-      <Button onClick={handleSync}>Sync</Button>
-
+      <Header handleSync={handleSync} />
+      <div className="mt-4">
       <IndexTable
         itemCount={productFieldsData.length}
         headings={[
@@ -118,8 +143,9 @@ export default function Index() {
       >
         {rowMarkup}
       </IndexTable>
+      </div>
 
-      <div className="polaris-btn mt-3">
+      <div className="polaris-btn mt-3 d-flex justify-content-center">
         <ButtonGroup segmented>
           <Button
             primary

@@ -32,7 +32,7 @@ export const ProductCatalog = () => {
               source={logo}
               alt="Local logo"
               style={{ maxWidth: "100%" }}
-              className="mt-2"
+              className="mt-3"
             />
             <p>
               We’ll appreciate if you could leave a short review that help us
