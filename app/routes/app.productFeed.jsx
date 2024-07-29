@@ -1,135 +1,129 @@
 import React from "react";
-import { Page, TextField, Card } from "@shopify/polaris";
-import { Container, Row, Col, FormGroup, Label, Input } from "reactstrap";
-import { Header } from "./components";
+import shopify from "../shopify.server";
+import { json } from "@remix-run/node";
+import { useLoaderData, useFetcher } from "@remix-run/react";
+import { Page, Card, Text, Button } from "@shopify/polaris";
+import { Header, TextFields, CheckBox, SelectBox } from "./components";
+import { Row, Col } from "reactstrap";
+import prisma from "../db.server";
 
-const radioOption = [
-  {
-    question: "Append currency parameter to product URL?",
-    options: [
-      {
-        label:
-          "Do Not append. (default, example: my-store.com/products/my-product)",
-      },
-      {
-        label:
-          "Do append. (example: my-store.com/products/my-product?currency=USD)",
-      },
-    ],
-  },
-  {
-    question: "All products or some of them?",
-    options: [
-      {
-        label: "All products",
-      },
-      {
-        label: "Products from selected collection",
-      },
-    ],
-  },
-  {
-    question: "Export mode",
-    options: [
-      {
-        label: "Export all variants of a product",
-      },
-      {
-        label: "Export only one variant of a product",
-      },
-    ],
-  },
-  {
-    question: "Use Compare at price:",
-    options: [
-      {
-        label: "Use both 'Compare at price and price' if they exist (default)",
-      },
-      {
-        label:
-          "Don't use 'Compare at' price - only the price field from Shopify will be used in the field",
-      },
-    ],
-  },
-  {
-    question: "Product and variant images",
-    options: [
-      {
-        label:
-          "Use variant's image if it exists and fallback to using product's image",
-      },
-      {
-        label: "Always use product's image (and never use variant's image)",
-      },
-    ],
-  },
-];
+export async function loader({ request }) {
+  const { admin, session } = await shopify.authenticate.admin(request);
+  const data = await admin.rest.resources.Product.all({ session });
+  return json(data);
+}
 
-const labelText = [
-  { text: "Custom Label 0" },
-  { text: "Custom Label 1" },
-  { text: "Custom Label 2" },
-  { text: "Custom Label 3" },
-  { text: "Custom Label 4" },
-];
+export const action = async ({ request }) => {
+  const formData = await request.formData();
+  const feedName = formData.get("feedName");
+  try {
+    const existingProduct = await prisma.productFields.create({
+      data: {
+        feedName,
+      },
+    });
+
+    return json({ success: true, product: existingProduct });
+  } catch (error) {
+    console.error("Error saving product feed name:", error);
+    return json({ success: false, error: error.message });
+  }
+};
 
 export default function ChangePlan() {
+  const fetcher = useFetcher();
+
+  const handleSaveClick = (event) => {
+    event.preventDefault();
+    const form = document.getElementById("productFeedForm");
+    if (form instanceof HTMLFormElement) {
+      fetcher.submit(new FormData(form), { method: "post" });
+    } else {
+      console.error("Form element not found or not of type HTMLFormElement");
+    }
+  };
+
   return (
-    <Card sectioned>
-      <Page>
-        <Header />
-        <Container fluid className="mt-4">
-          <Row>
-            <Col md="9" className="custom-section-left">
-              <h2>Add a product feed</h2>
-              <div className="d-flex">
-                <TextField placeholder="Enter Product Feed Name" />
-                <TextField placeholder="Enter Currency (PKR Only)" />
-              </div>
-
-              {radioOption.map((section, index) => (
-                <div key={index} className="mt-4">
-                  <h2>{section.question}</h2>
-                  {section.options.map((option, optIndex) => (
-                    <FormGroup key={optIndex} check className="mb-2">
-                      <Label check>
-                        <Input type="radio" name={`question${index}`} />{" "}
-                        {option.label}
-                      </Label>
-                    </FormGroup>
-                  ))}
+    <Page>
+      <Header />
+      <div className="mt-4">
+        <Card>
+          <form id="productFeedForm">
+            <Row>
+              {/* Left Section */}
+              <Col md="9">
+                {/* TextField */}
+                <div className="row">
+                  <Text as="h4" variant="headingLg">
+                    Add a product feed
+                  </Text>
+                  <TextFields
+                    placeholder="Enter Product Feed Name"
+                    type="text"
+                    name="feedName"
+                    classColMd="col-md-6"
+                  />
+                  <TextFields
+                    placeholder="Enter Currency (PKR Only)"
+                    type="text"
+                    name=""
+                    classColMd="col-md-6"
+                  />
                 </div>
-              ))}
 
-              <h2>Add a product feed</h2>
-              <div className="row">
-                {labelText.map((item, index) => (
-                  <div className="col-md-6" key={index}>
-                    <TextField fullWidth placeholder={item.text} />
-                  </div>
-                ))}
-              </div>
-
-              <h2>Custom Numbers</h2>
-              <div className="d-flex">
-                <div className="col-md-6 d-flex">
-                  <TextField fullWidth placeholder="test" />
-                  <TextField fullWidth placeholder="test" />
+                {/* CheckBox */}
+                <div className="mt-3">
+                  <h5>Append currency parameter to product URL?</h5>
+                  <CheckBox
+                    labelOne="Do Not append. (default, example: my-store.com/products/my-product)"
+                    labelTwo="Do append. (example: my-store.com/products/my-product?currency=USD)"
+                    name="CheckBox1"
+                  />
                 </div>
-              </div>
+                <div className="mt-3">
+                  <h5>All products or some of them?</h5>
+                  <CheckBox
+                    labelOne="All products"
+                    labelTwo="Products from selected collection"
+                    name="CheckBox2"
+                  />
+                </div>
+                {/* Text Box */}
+                <div className="row">
+                  <h5>Another Text Box</h5>
+                  <TextFields
+                    placeholder="Text Field"
+                    type="text"
+                    name=""
+                    classColMd="col-md-6"
+                  />
+                  <TextFields
+                    placeholder="Text Field"
+                    type="text"
+                    name=""
+                    classColMd="col-md-6"
+                  />
+                </div>
 
+                {/* Select Box */}
+                <div className="row mt-3">
+                  <h5>Select Box</h5>
+                  <SelectBox classColMd="col-md-12" />
+                </div>
+              </Col>
 
-              
-            </Col>
-            <Col md="3" className="custom-section-right">
-              <div>
-                <p>This is your right section content.</p>
-                <p>This is your right section content.</p>
-              </div>
-            </Col>
-          </Row>
-        </Container>
-      </Page>
-    </Card>
+              {/* Right Section */}
+              <Col md="3">
+                <div>
+                  <p>This is your right section content.</p>
+                  <p>This is your right section content.</p>
+                </div>
+              </Col>
+            </Row>
+            <button type="button" onClick={handleSaveClick} className="btn btn-primary mt-3">Save</button>
+          </form>
+        </Card>
+      </div>
+    </Page>
   );
 }

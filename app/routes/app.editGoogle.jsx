@@ -22,9 +22,9 @@ export default function editGoogle() {
   return (
     <Page>
       <Header />
-      <CustomDataTable columnType={columnType} rows={rows} heading={heading} />
-      <CustomDataTable columnType={columnType} rows={rows} heading={heading} />
-      <CustomDataTable columnType={columnType} rows={rows} heading={heading} />
+      <CustomDataTable columnType={columnType} rows={rows} heading={heading} title="Title One" />
+      <CustomDataTable columnType={columnType} rows={rows} heading={heading} title="Title Two" />
+      <CustomDataTable columnType={columnType} rows={rows} heading={heading} title="Title Three" />
     </Page>
   );
 };

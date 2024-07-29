@@ -15,23 +15,23 @@ export const loader = async ({ request }) => {
 };
 
 export default function App() {
+  const showNavMenu = false;
   const { apiKey } = useLoaderData();
 
   return (
-<>
-    
-      
     <AppProvider isEmbeddedApp={false} apiKey={apiKey}>
-      <NavMenu>
-        <Link to="/app" rel="home">Dashboard</Link>
-        <Link to="/app/changePlan">Change Plan</Link>
-        <Link to="/app/productFeed">Add A Product Feed</Link>
-        <Link to="/app/editSettings">Edit Settings</Link>
-        <Link to="/app/editGoogle">Edit Google</Link>
-      </NavMenu>
+      {showNavMenu && (
+        <NavMenu>
+          <Link to="/app" rel="home">Dashboard</Link>
+          <Link to="/app/changePlan">Change Plan</Link>
+          <Link to="/app/productFeed">Add A Product Feed</Link>
+          <Link to="/app/editSettings">Edit Settings</Link>
+          <Link to="/app/editGoogle">Edit Google</Link>
+        </NavMenu>
+      )}
+      {!showNavMenu}
       <Outlet />
     </AppProvider>
-    </>
   );
 }
 
