@@ -41,11 +41,216 @@ export const action = async ({ request }) => {
 };
 
 async function syncProducts(request) {
-  const { admin, session } = await authenticate.admin(request);
-  const data = await admin.rest.resources.Product.all({ session });
-  await saveProducts(data.data);
-  return json({ message: "Products synced successfully" });
+  try {
+    const { admin, session } = await authenticate.admin(request);
+    const data = await admin.rest.resources.Product.all({ session });
+    const collectData = await admin.rest.resources.Collect.all({ session });
+    const collections = await admin.rest.resources.CustomCollection.all({ session });
+
+    await saveProducts(data.data);
+
+    const upsertPromises = [];
+
+    const images = data.data.flatMap(product => product.images);
+    images.forEach(image => {
+      upsertPromises.push(
+        prisma.images.upsert({
+          where: { imageId: image.id.toString() },
+          update: {
+            shopifyId: image.product_id.toString(),
+            imageId: image.id.toString(),
+            createdAt: new Date(image.created_at),
+            height: image.height.toString(),
+            position: image.position.toString(),
+            src: image.src,
+            updatedAt: new Date(image.updated_at),
+            variantIds: image.variant_ids.length ? image.variant_ids.join(",") : null,
+            width: image.width.toString(),
+            alt: image.alt || "",
+            adminGraphqlApiId: image.admin_graphql_api_id,
+          },
+          create: {
+            shopifyId: image.product_id.toString(),
+            imageId: image.id.toString(),
+            createdAt: new Date(image.created_at),
+            height: image.height.toString(),
+            position: image.position.toString(),
+            src: image.src,
+            updatedAt: new Date(image.updated_at),
+            variantIds: image.variant_ids.length ? image.variant_ids.join(",") : null,
+            width: image.width.toString(),
+            alt: image.alt || "",
+            adminGraphqlApiId: image.admin_graphql_api_id,
+          },
+        }).catch(error => console.error("Error saving image:", error))
+      );
+    });
+
+    const options = data.data.flatMap(product => product.options);
+    options.forEach(option => {
+      upsertPromises.push(
+        prisma.options.upsert({
+          where: { optionId: option.id.toString() },
+          update: {
+            shopifyId: option.product_id.toString(),
+            optionId: option.id.toString(),
+            name: option.name,
+            position: option.position.toString(),
+            values: option.values.join(","),
+          },
+          create: {
+            shopifyId: option.product_id.toString(),
+            optionId: option.id.toString(),
+            name: option.name,
+            position: option.position.toString(),
+            values: option.values.join(","),
+          },
+        }).catch(error => console.error("Error upserting option:", error))
+      );
+    });
+
+    const variants = data.data.flatMap(product => product.variants);
+    variants.forEach(variant => {
+      upsertPromises.push(
+        prisma.variants.upsert({
+          where: { variantsId: variant.id.toString() },
+          update: {
+            productId: variant.product_id.toString(),
+            variantsId: variant.id.toString(),
+            barcode: variant.barcode || null,
+            compareAtPrice: variant.compare_at_price || null,
+            createdAt: new Date(variant.created_at),
+            fulfillmentService: variant.fulfillment_service,
+            grams: variant.grams.toString(),
+            imageId: variant.image_id || null,
+            inventoryItemId: variant.inventory_item_id.toString(),
+            inventoryManagement: variant.inventory_management || null,
+            inventoryPolicy: variant.inventory_policy,
+            inventoryQuantity: variant.inventory_quantity.toString(),
+            oldInventoryQuantity: variant.old_inventory_quantity.toString(),
+            position: variant.position.toString(),
+            price: variant.price.toString(),
+            requiresShipping: variant.requires_shipping,
+            sku: variant.sku || null,
+            taxable: variant.taxable,
+            title: variant.title,
+            updatedAt: new Date(variant.updated_at),
+            weight: variant.weight.toString(),
+            weight_unit: variant.weight_unit,
+            option1: variant.option1,
+            option2: variant.option2 || null,
+            option3: variant.option3 || null,
+            adminGraphqlApiId: variant.admin_graphql_api_id,
+          },
+          create: {
+            productId: variant.product_id.toString(),
+            variantsId: variant.id.toString(),
+            barcode: variant.barcode || null,
+            compareAtPrice: variant.compare_at_price || null,
+            createdAt: new Date(variant.created_at),
+            fulfillmentService: variant.fulfillment_service,
+            grams: variant.grams.toString(),
+            imageId: variant.image_id || null,
+            inventoryItemId: variant.inventory_item_id.toString(),
+            inventoryManagement: variant.inventory_management || null,
+            inventoryPolicy: variant.inventory_policy,
+            inventoryQuantity: variant.inventory_quantity.toString(),
+            oldInventoryQuantity: variant.old_inventory_quantity.toString(),
+            position: variant.position.toString(),
+            price: variant.price.toString(),
+            requiresShipping: variant.requires_shipping,
+            sku: variant.sku || null,
+            taxable: variant.taxable,
+            title: variant.title,
+            updatedAt: new Date(variant.updated_at),
+            weight: variant.weight.toString(),
+            weight_unit: variant.weight_unit,
+            option1: variant.option1,
+            option2: variant.option2 || null,
+            option3: variant.option3 || null,
+            adminGraphqlApiId: variant.admin_graphql_api_id,
+          },
+        }).catch(error => console.error("Error upserting variant:", error))
+      );
+    });
+
+    collectData.data.forEach(collect => {
+      upsertPromises.push(
+        prisma.collect.upsert({
+          where: { collectId: collect.id.toString() },
+          update: {
+            collectionId: collect.collection_id.toString(),
+            productId: collect.product_id.toString(),
+            createdAt: new Date(collect.created_at),
+            position: collect.position.toString(),
+            sortValue: collect.sort_value,
+            updatedAt: new Date(collect.updated_at),
+          },
+          create: {
+            collectId: collect.id.toString(),
+            collectionId: collect.collection_id.toString(),
+            productId: collect.product_id.toString(),
+            createdAt: new Date(collect.created_at),
+            position: collect.position.toString(),
+            sortValue: collect.sort_value,
+            updatedAt: new Date(collect.updated_at),
+          },
+        }).catch(error => console.error("Error upserting collect:", error))
+      );
+    });
+
+    collections.data.forEach(collection => {
+      upsertPromises.push(
+        prisma.collections.upsert({
+          where: { collectionId: collection.id.toString() },
+          update: {
+            title: collection.title,
+            bodyHtml: collection.body_html, 
+            handle: collection.handle,
+            image: collection.image || null,
+            published: collection.published || null,
+            publishedAt: collection.published_at ? new Date(collection.published_at) : null,
+            publishedScope: collection.published_scope || null,
+            sortOrder: collection.sort_order || null,
+            templateSuffix: collection.template_suffix || null,
+            updatedAt: collection.updated_at ? new Date(collection.updated_at) : new Date(),
+            adminGraphqlApiId: collection.admin_graphql_api_id || null
+          },
+          create: {
+            collectionId: collection.id.toString(),
+            title: collection.title,
+            bodyHtml: collection.body_html, 
+            handle: collection.handle,
+            image: collection.image || null,
+            published: collection.published || null,
+            publishedAt: collection.published_at ? new Date(collection.published_at) : new Date(),
+            publishedScope: collection.published_scope || null,
+            sortOrder: collection.sort_order || null,
+            templateSuffix: collection.template_suffix || null,
+            updatedAt: collection.updated_at ? new Date(collection.updated_at) : new Date(),
+            adminGraphqlApiId: collection.admin_graphql_api_id || null
+          }
+        }).catch(error => console.error("Error upserting collection:", error))
+      );
+    });
+    
+    await Promise.all(upsertPromises);
+
+    return json({
+      message: "Products, images, options, and variants synced successfully",
+    });
+  } catch (error) {
+    console.error("Error syncing products, images, options, and variants:", error);
+    return json(
+      {
+        message: "Error syncing products, images, options, and variants",
+        error: error.message,
+      },
+      { status: 500 },
+    );
+  }
 }
+
 
 async function generateXML(products) {
   try {
@@ -131,18 +336,18 @@ export default function Index() {
     <Page>
       <Header handleSync={handleSync} />
       <div className="mt-4">
-      <IndexTable
-        itemCount={productFieldsData.length}
-        headings={[
-          { title: "Image" },
-          { title: "Id" },
-          { title: "Title" },
-          { title: "Action" },
-        ]}
-        selectable={false}
-      >
-        {rowMarkup}
-      </IndexTable>
+        <IndexTable
+          itemCount={productFieldsData.length}
+          headings={[
+            { title: "Image" },
+            { title: "Id" },
+            { title: "Title" },
+            { title: "Action" },
+          ]}
+          selectable={false}
+        >
+          {rowMarkup}
+        </IndexTable>
       </div>
 
       <div className="polaris-btn mt-3 d-flex justify-content-center">
