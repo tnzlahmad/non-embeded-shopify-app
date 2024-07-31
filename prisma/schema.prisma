@@ -52,3 +52,89 @@ model Product {
   adminGraphqlApiId String
   imageUrl          String?
 }
+
+
+model Images {
+  id                String   @id @default(uuid())
+  shopifyId         String   
+  imageId           String   @unique
+  createdAt         DateTime
+  height            String
+  position          String
+  src               String
+  updatedAt         DateTime
+  variantIds        String?
+  width             String
+  alt               String
+  adminGraphqlApiId String
+}
+
+
+model Options {
+  id        String   @id @default(uuid())
+  shopifyId String
+  optionId  String   @unique
+  name      String
+  position  String
+  values    String
+}
+
+
+model Variants {
+  id                   String   @id @default(uuid())
+  productId            String
+  variantsId           String   @unique
+  barcode              String?
+  compareAtPrice       String?
+  createdAt            DateTime
+  fulfillmentService   String
+  grams                String
+  imageId              String?
+  inventoryItemId      String
+  inventoryManagement  String?
+  inventoryPolicy      String
+  inventoryQuantity    String  
+  oldInventoryQuantity String   
+  position             String
+  price                String
+  requiresShipping     Boolean
+  sku                  String?
+  taxable              Boolean
+  title                String
+  updatedAt            DateTime
+  weight               String
+  weight_unit          String
+  option1              String
+  option2              String?
+  option3              String?
+  adminGraphqlApiId    String
+}
+
+
+model Collect {
+  id            String   @id @default(uuid())
+  collectId     String   @unique
+  collectionId  String
+  productId     String
+  createdAt     DateTime
+  position      String
+  sortValue     String
+  updatedAt     DateTime
+}
+
+
+model Collections {
+  id                String   @id @default(uuid())
+  collectionId      String   @unique
+  title             String
+  bodyHtml          String
+  handle            String
+  image             String?
+  published         String?
+  publishedAt       DateTime
+  publishedScope    String
+  sortOrder         String
+  templateSuffix    String?
+  updatedAt         DateTime
+  adminGraphqlApiId String
+}

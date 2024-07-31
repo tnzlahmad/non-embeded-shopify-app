@@ -6,7 +6,14 @@ import { useFetcher, useLoaderData, useSubmit } from "@remix-run/react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Page, Button, IndexTable, ButtonGroup } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
-import { saveProducts } from "../utitls/product.server";
+import {
+  saveProducts,
+  upsertImages,
+  upsertOptions,
+  upsertVariants,
+  upsertCollects,
+  upsertCollections,
+} from "../utitls/product.server";
 import { ProductCatalog, FAQsComponent, Header } from "./components";
 import prisma from "../db.server";
 import eyeIcon from "../assets/image/eye.svg";
@@ -16,7 +23,7 @@ export async function loader({ request }) {
   const { admin, session } = await authenticate.admin(request);
   const data = await admin.rest.resources.Product.all({ session });
   const shopName = session.shop;
-  const productFieldsData = await prisma.productFields.findMany();
+  const productFieldsData = await prisma.ProductFeed.findMany();
   const productData = await prisma.product.findMany();
   return json({ shopName, productFieldsData, data, productData });
 }
@@ -30,7 +37,7 @@ export const action = async ({ request }) => {
   } else {
     const id = formData.get("id");
     try {
-      await prisma.productFields.delete({
+      await prisma.ProductFeed.delete({
         where: { id: Number(id) },
       });
       return redirect("/products");
@@ -41,10 +48,45 @@ export const action = async ({ request }) => {
 };
 
 async function syncProducts(request) {
-  const { admin, session } = await authenticate.admin(request);
-  const data = await admin.rest.resources.Product.all({ session });
-  await saveProducts(data.data);
-  return json({ message: "Products synced successfully" });
+  try {
+    const { admin, session } = await authenticate.admin(request);
+
+    const [productResponse, collectResponse, collectionResponse] =
+      await Promise.all([
+        admin.rest.resources.Product.all({ session }),
+        admin.rest.resources.Collect.all({ session }),
+        admin.rest.resources.CustomCollection.all({ session }),
+      ]);
+
+    const productData = productResponse.data || [];
+    const collectData = collectResponse.data || [];
+    const collectionData = collectionResponse.data || [];
+
+    const imagesData = productData.flatMap((product) => product.images || []);
+    const optionsData = productData.flatMap((product) => product.options || []);
+    const variantsData = productData.flatMap(
+      (product) => product.variants || [],
+    );
+
+    await Promise.all([
+      saveProducts(productData),
+      upsertImages(imagesData),
+      upsertOptions(optionsData),
+      upsertVariants(variantsData),
+      upsertCollects(collectData),
+      upsertCollections(collectionData),
+    ]);
+
+    console.log("Sync completed successfully.");
+    return { success: true, message: "Sync completed successfully" };
+  } catch (error) {
+    console.error("Error syncing products:", error);
+    return {
+      success: false,
+      message: "Error syncing products",
+      error: error.message,
+    };
+  }
 }
 
 async function generateXML(products) {
@@ -103,22 +145,21 @@ export default function Index() {
   }
 
   // Generate rows for IndexTable
-  const rowMarkup = currentItems.map(({ image, id, feedName }, index) => (
+  const rowMarkup = currentItems.map(({ id, feedName }, index) => (
     <IndexTable.Row id={id} key={id} position={index}>
-      <IndexTable.Cell>
-        {image ? (
-          <img height={"40px"} src={image.src} alt={title} />
-        ) : (
-          <span>No Image</span>
-        )}
-      </IndexTable.Cell>
-      <IndexTable.Cell>{id}</IndexTable.Cell>
+    <IndexTable.Cell>{index + 1}</IndexTable.Cell>
+    <IndexTable.Cell>{feedName}</IndexTable.Cell>
+      {/* <IndexTable.Cell>{feedName}</IndexTable.Cell>
       <IndexTable.Cell>{feedName}</IndexTable.Cell>
+      <IndexTable.Cell>{feedName}</IndexTable.Cell>
+      <IndexTable.Cell>{feedName}</IndexTable.Cell> */}
+      <IndexTable.Cell>
+        <Button type="button" onClick={handleXML}>
+          <img src={eyeIcon} alt="Eye Icon" width={15} />
+        </Button>
+      </IndexTable.Cell>
       <IndexTable.Cell>
         <ButtonGroup>
-          <Button type="button" onClick={handleXML}>
-            <img src={eyeIcon} alt="Eye Icon" width={15} />
-          </Button>
           <Button type="button" onClick={() => handleDelete(id)}>
             Delete
           </Button>
@@ -131,18 +172,22 @@ export default function Index() {
     <Page>
       <Header handleSync={handleSync} />
       <div className="mt-4">
-      <IndexTable
-        itemCount={productFieldsData.length}
-        headings={[
-          { title: "Image" },
-          { title: "Id" },
-          { title: "Title" },
-          { title: "Action" },
-        ]}
-        selectable={false}
-      >
-        {rowMarkup}
-      </IndexTable>
+        <IndexTable
+          itemCount={productFieldsData.length}
+          headings={[
+            { title: "No" },
+            { title: "Name" },
+            // { title: "Num. Of Products" },
+            // { title: "Status" },
+            // { title: "Last Refreshed" },
+            // { title: "Feed Url" },
+            { title: "View Feed" },
+            { title: "Actions" },
+          ]}
+          selectable={false}
+        >
+          {rowMarkup}
+        </IndexTable>
       </div>
 
       <div className="polaris-btn mt-3 d-flex justify-content-center">
