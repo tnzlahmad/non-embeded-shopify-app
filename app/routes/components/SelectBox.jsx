@@ -1,18 +1,15 @@
 import React from "react";
-import { Label, Input, FormGroup } from "reactstrap";
+import { FormGroup, Input } from "reactstrap";
 
-const options = [1, 2, 3, 4, 5];
-
-export const SelectBox = ({ title, classColMd }) => {
+export const SelectBox = ({ classColMd, options, name }) => {
   return (
     <div className={`${classColMd}`}>
       <FormGroup>
-        <Label for="testSelect">{title}</Label>
-        <Input id="testSelect" name="select" type="select">
+        <Input name={name} type="select">
           <option value="">Please Select an Option</option>
           {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
+            <option key={option.id} value={option.title}>
+              {option.title}
             </option>
           ))}
         </Input>
@@ -20,6 +17,3 @@ export const SelectBox = ({ title, classColMd }) => {
     </div>
   );
 };
-
-// Usage example
-// <SelectBox title="Select" />

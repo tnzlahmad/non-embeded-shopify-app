@@ -20,17 +20,17 @@ export const Header = ({ handleSync }) => (
       />
        </Link>
       <ButtonGroup>
-        <Link url="/app/changePlan">
+        {/* <Link url="/app/changePlan">
           <Button size="large" primary>
             Change Plan
           </Button>
-        </Link>
+        </Link> */}
         <Link url="/app/productFeed">
           <Button size="large" primary>
             Add A Product Feed
           </Button>
         </Link>
-        <Link url="/app/editSettings">
+        {/* <Link url="/app/editSettings">
           <Button size="large" primary>
             Edit Settings
           </Button>
@@ -44,7 +44,7 @@ export const Header = ({ handleSync }) => (
           <Button size="large" primary>
             Product
           </Button>
-        </Link>
+        </Link> */}
         <Button onClick={handleSync}>Sync</Button>
       </ButtonGroup>
     </div>
