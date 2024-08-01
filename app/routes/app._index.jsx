@@ -24,11 +24,11 @@ export async function loader({ request }) {
   const { admin, session } = await authenticate.admin(request);
   const data = await admin.rest.resources.Product.all({ session });
   const shopName = session.shop;
-  const productFieldsData = await prisma.productFeed.findMany();
+  const productFeedsData = await prisma.productFeed.findMany();
   const productData = await prisma.product.findMany();
   const collecData = await prisma.collect.findMany();
   const collectionData = await prisma.collections.findMany();
-  return json({ shopName, productFieldsData, data, productData , collecData , collectionData });
+  return json({ shopName, productFeedsData, data, productData , collecData , collectionData });
 }
 
 export const action = async ({ request }) => {
@@ -98,12 +98,12 @@ async function generateXML(products) {
 
 export default function Index() {
   const itemsPerPage = 5;
-  const { shopName, productFieldsData, productData , collecData , collectionData } = useLoaderData();
+  const { shopName, productFeedsData, productData , collecData , collectionData } = useLoaderData();
   const [currentPage, setCurrentPage] = useState(1);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = productFieldsData.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(productFieldsData.length / itemsPerPage);
+  const currentItems = productFeedsData.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(productFeedsData.length / itemsPerPage);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -175,7 +175,7 @@ export default function Index() {
       <Header handleSync={handleSync} />
       <div className="mt-4">
         <IndexTable
-          itemCount={productFieldsData.length}
+          itemCount={productFeedsData.length}
           headings={[
             { title: "No" },
             { title: "Name" },
