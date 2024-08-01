@@ -142,27 +142,8 @@ model Collections {
 
 model ProductFeed {
   id                    String   @id @default(uuid())
-  feedName              String?
-  currency              String?
-  productURL            String?
-  allOrSomeProduct      String?
-  chooseCollections     String?
-  exportMode            String?
-  exportSingleVariant   String?
-  comparePrice          String?
-  productVariantImg     String?
-  customLabelsOne       String?
-  customLabelsTwo       String?
-  customLabelsThree     String?
-  customLabelsFour      String?
-  customLabelsFive      String?
-  featCollCustomLabels  String?
-  featProdTagsOnLabels  String?
-  variantTitle          String?
-  customTax             String?
-  excludeOptions        String?
-  shippingLabel         String?
-  addTaxAllPrices       String?
+  feedName              String
+  productFeedURL        String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }
