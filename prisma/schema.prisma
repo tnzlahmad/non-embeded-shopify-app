@@ -138,3 +138,12 @@ model Collections {
   updatedAt         DateTime
   adminGraphqlApiId String
 }
+
+
+model ProductFeed {
+  id                    String   @id @default(uuid())
+  feedName              String
+  productFeedURL        String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}

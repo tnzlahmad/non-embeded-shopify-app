@@ -19,13 +19,16 @@ import prisma from "../db.server";
 import eyeIcon from "../assets/image/eye.svg";
 import { parse } from "js2xmlparser";
 
+// Data Get From Database + Live
 export async function loader({ request }) {
   const { admin, session } = await authenticate.admin(request);
   const data = await admin.rest.resources.Product.all({ session });
   const shopName = session.shop;
-  const productFieldsData = await prisma.ProductFeed.findMany();
+  const productFeedsData = await prisma.productFeed.findMany();
   const productData = await prisma.product.findMany();
-  return json({ shopName, productFieldsData, data, productData });
+  const collecData = await prisma.collect.findMany();
+  const collectionData = await prisma.collections.findMany();
+  return json({ shopName, productFeedsData, data, productData , collecData , collectionData });
 }
 
 export const action = async ({ request }) => {
@@ -34,19 +37,12 @@ export const action = async ({ request }) => {
 
   if (actionType === "syncProducts") {
     return await syncProducts(request);
-  } else {
-    const id = formData.get("id");
-    try {
-      await prisma.ProductFeed.delete({
-        where: { id: Number(id) },
-      });
-      return redirect("/products");
-    } catch (error) {
-      return json({ error: "Failed to delete product" }, { status: 500 });
-    }
   }
+
+  return json({ error: "Invalid action type" }, { status: 400 });
 };
 
+// Product Sync
 async function syncProducts(request) {
   try {
     const { admin, session } = await authenticate.admin(request);
@@ -89,6 +85,7 @@ async function syncProducts(request) {
   }
 }
 
+// Generate XML Function
 async function generateXML(products) {
   try {
     const xml = parse("Products", { Product: products });
@@ -101,12 +98,12 @@ async function generateXML(products) {
 
 export default function Index() {
   const itemsPerPage = 5;
-  const { shopName, productFieldsData, productData } = useLoaderData();
+  const { shopName, productFeedsData, productData , collecData , collectionData } = useLoaderData();
   const [currentPage, setCurrentPage] = useState(1);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = productFieldsData.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(productFieldsData.length / itemsPerPage);
+  const currentItems = productFeedsData.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(productFeedsData.length / itemsPerPage);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -119,26 +116,34 @@ export default function Index() {
     submit(formData, { method: "post" });
   };
 
-  const fetcher = useFetcher();
-  const handleDelete = async (id) => {
-    const formData = new FormData();
-    formData.append("id", id);
-    fetcher.submit(formData, { method: "post" });
-  };
-
   async function handleXML() {
-    if (!productData || productData.length === 0) {
+    if (!productData || !productData.length) {
       alert("No data found in the database");
       return;
     }
 
     try {
-      const xml = await generateXML(productData);
+      const enrichedProducts = productData.map(product => {
+        const collections = collecData
+          .filter(collect => collect.productId === product.shopifyId)
+          .map(collect => {
+            const collection = collectionData.find(col => col.collectionId === collect.collectionId) || {};
+            return {
+              collectData: { ...collect },
+              collectionDetails: { ...collection }
+            };
+          });
+
+        return {
+          ...product,
+          collections: collections.length ? { collection: collections } : { collection: [] }
+        };
+      });
+
+      const xml = await generateXML(enrichedProducts);
 
       const blob = new Blob([xml], { type: "application/xml" });
-      const url = URL.createObjectURL(blob);
-
-      window.open(url, "_blank");
+      window.open(URL.createObjectURL(blob), "_blank");
     } catch (error) {
       console.error("Error generating XML:", error);
     }
@@ -147,12 +152,9 @@ export default function Index() {
   // Generate rows for IndexTable
   const rowMarkup = currentItems.map(({ id, feedName }, index) => (
     <IndexTable.Row id={id} key={id} position={index}>
-    <IndexTable.Cell>{index + 1}</IndexTable.Cell>
-    <IndexTable.Cell>{feedName}</IndexTable.Cell>
-      {/* <IndexTable.Cell>{feedName}</IndexTable.Cell>
+      <IndexTable.Cell>{index + 1}</IndexTable.Cell>
       <IndexTable.Cell>{feedName}</IndexTable.Cell>
-      <IndexTable.Cell>{feedName}</IndexTable.Cell>
-      <IndexTable.Cell>{feedName}</IndexTable.Cell> */}
+      <IndexTable.Cell>FEED URL</IndexTable.Cell>
       <IndexTable.Cell>
         <Button type="button" onClick={handleXML}>
           <img src={eyeIcon} alt="Eye Icon" width={15} />
@@ -160,7 +162,7 @@ export default function Index() {
       </IndexTable.Cell>
       <IndexTable.Cell>
         <ButtonGroup>
-          <Button type="button" onClick={() => handleDelete(id)}>
+          <Button type="button">
             Delete
           </Button>
         </ButtonGroup>
@@ -173,14 +175,11 @@ export default function Index() {
       <Header handleSync={handleSync} />
       <div className="mt-4">
         <IndexTable
-          itemCount={productFieldsData.length}
+          itemCount={productFeedsData.length}
           headings={[
             { title: "No" },
             { title: "Name" },
-            // { title: "Num. Of Products" },
-            // { title: "Status" },
-            // { title: "Last Refreshed" },
-            // { title: "Feed Url" },
+            { title: "Feed Url" },
             { title: "View Feed" },
             { title: "Actions" },
           ]}
