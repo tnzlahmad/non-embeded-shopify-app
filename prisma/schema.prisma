@@ -26,17 +26,9 @@ model Session {
 }
 
 
-model ProductFields {
-  id             Int       @id @default(autoincrement())
-  feedName       String
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-}
-
-
 model Product {
   id                String   @id @default(uuid())
-  shopifyId         String   @unique
+  productId         String   @unique
   title             String
   bodyHtml          String?
   createdAt         DateTime
@@ -51,12 +43,13 @@ model Product {
   vendor            String
   adminGraphqlApiId String
   imageUrl          String?
+  shopName          String?
 }
 
 
 model Images {
   id                String   @id @default(uuid())
-  shopifyId         String   
+  productId         String   
   imageId           String   @unique
   createdAt         DateTime
   height            String
@@ -72,7 +65,7 @@ model Images {
 
 model Options {
   id        String   @id @default(uuid())
-  shopifyId String
+  productId String
   optionId  String   @unique
   name      String
   position  String
@@ -142,8 +135,9 @@ model Collections {
 
 model ProductFeed {
   id                    String   @id @default(uuid())
-  feedName              String
+  feedName              String   @unique
   productFeedURL        String?
+  shopName              String
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }

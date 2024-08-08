@@ -28,7 +28,10 @@ export async function loader({ request }) {
   const productData = await prisma.product.findMany();
   const collecData = await prisma.collect.findMany();
   const collectionData = await prisma.collections.findMany();
-  return json({ shopName, productFeedsData, data, productData , collecData , collectionData });
+  const variants = await prisma.variants.findMany(); 
+  const options = await prisma.options.findMany();
+  const images = await prisma.images.findMany();
+  return json({ shopName, productFeedsData, data, productData , collecData , collectionData, variants, options, images });
 }
 
 export const action = async ({ request }) => {
@@ -46,7 +49,7 @@ export const action = async ({ request }) => {
 async function syncProducts(request) {
   try {
     const { admin, session } = await authenticate.admin(request);
-
+    const shopName = session.shop; 
     const [productResponse, collectResponse, collectionResponse] =
       await Promise.all([
         admin.rest.resources.Product.all({ session }),
@@ -65,7 +68,7 @@ async function syncProducts(request) {
     );
 
     await Promise.all([
-      saveProducts(productData),
+      saveProducts(productData , shopName),
       upsertImages(imagesData),
       upsertOptions(optionsData),
       upsertVariants(variantsData),
@@ -73,7 +76,6 @@ async function syncProducts(request) {
       upsertCollections(collectionData),
     ]);
 
-    console.log("Sync completed successfully.");
     return { success: true, message: "Sync completed successfully" };
   } catch (error) {
     console.error("Error syncing products:", error);
@@ -98,12 +100,13 @@ async function generateXML(products) {
 
 export default function Index() {
   const itemsPerPage = 5;
-  const { shopName, productFeedsData, productData , collecData , collectionData } = useLoaderData();
+  const { shopName, productFeedsData, productData, collecData, collectionData, variants, options, images } = useLoaderData();
   const [currentPage, setCurrentPage] = useState(1);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = productFeedsData.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(productFeedsData.length / itemsPerPage);
+  const filteredProductFeeds = productFeedsData.filter(item => item.shopName === shopName);
+  const currentItems = filteredProductFeeds.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredProductFeeds.length / itemsPerPage);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -116,49 +119,114 @@ export default function Index() {
     submit(formData, { method: "post" });
   };
 
-  async function handleXML() {
-    if (!productData || !productData.length) {
+  async function handleXML(feedName , shopName) {
+    if (!productData?.length) {
       alert("No data found in the database");
       return;
     }
+  
+    const sanitizeFeedName = (name) => (typeof name === 'string' ? name.replace(/\s+/g, '') : 'defaultFeedName');
+  
+    const createFilename = (feedName) => {
+      return `${new Date().toISOString().replace(/[-:.T]/g, '')}_${sanitizeFeedName(feedName)}.xml`;
+    };
 
-    try {
-      const enrichedProducts = productData.map(product => {
-        const collections = collecData
-          .filter(collect => collect.productId === product.shopifyId)
-          .map(collect => {
-            const collection = collectionData.find(col => col.collectionId === collect.collectionId) || {};
-            return {
-              collectData: { ...collect },
-              collectionDetails: { ...collection }
-            };
-          });
-
+    const getProductDetails = (productId) => {
+      const productImages = images.filter(image => image.productId === productId);
+      const productOptions = options.filter(option => option.productId === productId);
+      const productVariants = variants.filter(variant => variant.productId === productId);
+  
+      return {
+        images: productImages,
+        options: productOptions,
+        variants: productVariants,
+      };
+    };
+  
+    const generateEnrichedProducts = () => productData
+      .filter(product => product.shopName === shopName)
+      .map(product => {
+        const { images, options, variants } = getProductDetails(product.productId);
+  
         return {
           ...product,
-          collections: collections.length ? { collection: collections } : { collection: [] }
+          images,
+          options,
+          variants,
+          collections: collecData
+            .filter(collect => collect.productId === product.productId)
+            .map(collect => ({
+              collectData: { ...collect },
+              collectionDetails: collectionData.find(col => col.collectionId === collect.collectionId) || {}
+            }))
         };
       });
-
-      const xml = await generateXML(enrichedProducts);
-
-      const blob = new Blob([xml], { type: "application/xml" });
-      window.open(URL.createObjectURL(blob), "_blank");
+  
+    try {
+      const xml = await generateXML(generateEnrichedProducts());
+      const xmlFilename = createFilename(feedName);
+  
+      const formData = new FormData();
+      formData.append('actionType', 'saveXML');
+      formData.append('xmlData', xml);
+      formData.append('feedName', feedName);
+      formData.append('filename', xmlFilename);
+  
+      const saveResponse = await fetch('/save-xml', { method: 'POST', body: formData });
+      const saveResult = await saveResponse.json();
+  
+  
+      if (!saveResult.success) {
+        throw new Error(saveResult.error || 'Failed to save XML file');
+      }
+  
+      const updateResponse = await fetch('/update-feed-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          feedName,
+          productFeedURL: xmlFilename,
+        }),
+      });
+  
+      const updateResult = await updateResponse.json();
+  
+  
+      if (updateResult.success) {
+        alert('Product feed URL updated successfully');
+      } else {
+        throw new Error(updateResult.error || 'Failed to update product feed URL');
+      }
+      window.location.reload();
     } catch (error) {
-      console.error("Error generating XML:", error);
+      console.error("Error generating, saving, or updating XML:", error);
+      alert('Failed to save XML file or update feed URL');
     }
   }
-
+  
   // Generate rows for IndexTable
-  const rowMarkup = currentItems.map(({ id, feedName }, index) => (
+  const rowMarkup = currentItems.map(({ id, feedName , productFeedURL }, index) => (
     <IndexTable.Row id={id} key={id} position={index}>
       <IndexTable.Cell>{index + 1}</IndexTable.Cell>
       <IndexTable.Cell>{feedName}</IndexTable.Cell>
-      <IndexTable.Cell>FEED URL</IndexTable.Cell>
       <IndexTable.Cell>
-        <Button type="button" onClick={handleXML}>
-          <img src={eyeIcon} alt="Eye Icon" width={15} />
-        </Button>
+        {productFeedURL ? (
+          <a
+            href={`/xml-folder/${productFeedURL}`}
+            target="_blank"
+          >
+            {productFeedURL}
+          </a>
+        ) : (
+          'No Product Feed URL'
+        )}
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+      <Button type="button" onClick={() => handleXML(feedName, shopName)}>
+        <img src={eyeIcon} alt="Eye Icon" width={15} />
+      </Button>
       </IndexTable.Cell>
       <IndexTable.Cell>
         <ButtonGroup>

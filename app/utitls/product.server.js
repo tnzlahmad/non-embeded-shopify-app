@@ -1,14 +1,14 @@
 // utils/prisma.server.js
 import { PrismaClient, Prisma } from '@prisma/client';
 const prisma = new PrismaClient();
-export async function saveProducts(products) {
+export async function saveProducts(products , shopName) {
   const successfulUpserts = [];
   const failedUpserts = [];
 
   for (const product of products) {
     try {
       const result = await prisma.product.upsert({
-        where: { shopifyId: String(product.id) },
+        where: { productId: String(product.id) },
         update: {
           title: product.title,
           bodyHtml: product.body_html,
@@ -24,9 +24,10 @@ export async function saveProducts(products) {
           vendor: product.vendor,
           adminGraphqlApiId: product.admin_graphql_api_id,
           imageUrl: product.image?.src || null,
+          shopName: shopName,
         },
         create: {
-          shopifyId: String(product.id),
+          productId: String(product.id),
           title: product.title,
           bodyHtml: product.body_html,
           createdAt: new Date(product.created_at),
@@ -41,6 +42,7 @@ export async function saveProducts(products) {
           vendor: product.vendor,
           adminGraphqlApiId: product.admin_graphql_api_id,
           imageUrl: product.image?.src || null,
+          shopName: shopName,
         },
       });
       successfulUpserts.push(result);
@@ -66,7 +68,7 @@ export async function upsertImages(images) {
       const result = await prisma.images.upsert({
         where: { imageId: image.id.toString() },
         update: {
-          shopifyId: image.product_id.toString(),
+          productId: image.product_id.toString(),
           imageId: image.id.toString(),
           createdAt: new Date(image.created_at),
           height: image.height.toString(),
@@ -79,7 +81,7 @@ export async function upsertImages(images) {
           adminGraphqlApiId: image.admin_graphql_api_id,
         },
         create: {
-          shopifyId: image.product_id.toString(),
+          productId: image.product_id.toString(),
           imageId: image.id.toString(),
           createdAt: new Date(image.created_at),
           height: image.height.toString(),
@@ -115,14 +117,14 @@ export async function upsertOptions(options) {
       const result = await prisma.options.upsert({
         where: { optionId: option.id.toString() },
         update: {
-          shopifyId: option.product_id.toString(),
+          productId: option.product_id.toString(),
           optionId: option.id.toString(),
           name: option.name,
           position: option.position.toString(),
           values: option.values.join(","),
         },
         create: {
-          shopifyId: option.product_id.toString(),
+          productId: option.product_id.toString(),
           optionId: option.id.toString(),
           name: option.name,
           position: option.position.toString(),
@@ -310,3 +312,7 @@ export async function upsertCollections(collections) {
 
   return { successfulUpserts, failedUpserts };
 }
+
+
+
+
