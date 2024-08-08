@@ -15,3 +15,5 @@ database.sqlite
 
 
 /extensions/*/dist
+.vercel
+.env*.local
