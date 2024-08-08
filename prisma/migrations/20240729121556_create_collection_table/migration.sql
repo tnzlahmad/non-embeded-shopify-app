@@ -7,11 +7,11 @@ CREATE TABLE "Collections" (
     "handle" TEXT NOT NULL,
     "image" TEXT,
     "published" TEXT,
-    "publishedAt" DATETIME NOT NULL,
+    "publishedAt" TIMESTAMP NOT NULL,
     "publishedScope" TEXT NOT NULL,
     "sortOrder" TEXT NOT NULL,
     "templateSuffix" TEXT,
-    "updatedAt" DATETIME NOT NULL,
+    "updatedAt" TIMESTAMP NOT NULL,
     "adminGraphqlApiId" TEXT NOT NULL
 );
 

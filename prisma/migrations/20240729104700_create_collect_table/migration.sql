@@ -4,10 +4,10 @@ CREATE TABLE "Collect" (
     "collectId" TEXT NOT NULL,
     "collectionId" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL,
     "position" TEXT NOT NULL,
     "sortValue" TEXT NOT NULL,
-    "updatedAt" DATETIME NOT NULL
+    "updatedAt" TIMESTAMP NOT NULL
 );
 
 -- CreateIndex
