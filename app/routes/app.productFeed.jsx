@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { Page, Card, Banner } from "@shopify/polaris";
 import { Header, TextFields } from "./components";
@@ -41,7 +41,7 @@ export const action = async ({ request }) => {
       data: { feedName, shopName },
     });
 
-    return json({ success: true, product: productFeed });
+    return redirect("/app");
   } catch (error) {
     console.error("Error saving product feed name:", error);
     return json({ success: false, error: error.message });

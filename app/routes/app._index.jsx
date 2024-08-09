@@ -16,7 +16,7 @@ import {
 } from "../utitls/product.server";
 import { ProductCatalog, FAQsComponent, Header } from "./components";
 import prisma from "../db.server";
-import eyeIcon from "../assets/image/eye.svg";
+import generateIcon from "../assets/image/generate.icon.svg";
 import { parse } from "js2xmlparser";
 
 // Data Get From Database + Live
@@ -107,6 +107,31 @@ export default function Index() {
   const filteredProductFeeds = productFeedsData.filter(item => item.shopName === shopName);
   const currentItems = filteredProductFeeds.slice(startIndex, endIndex);
   const totalPages = Math.ceil(filteredProductFeeds.length / itemsPerPage);
+
+
+  const handleDelete = async (feedName) => {
+    try {
+      const response = await fetch("/delete-feed", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ actionType: "deleteFeed", feedName }),
+      });
+      const result = await response.json();
+  
+      if (result.success) {
+        alert("Product feed deleted successfully");
+        window.location.reload();
+      } else {
+        alert(result.message || "Failed to delete product feed");
+      }
+    } catch (error) {
+      console.error("Error deleting product feed:", error);
+      alert("Failed to delete product feed");
+    }
+  };
+  
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
@@ -228,14 +253,14 @@ export default function Index() {
       </IndexTable.Cell>
       <IndexTable.Cell>
       <Button type="button" onClick={() => handleXML(feedName, shopName)}>
-        <img src={eyeIcon} alt="Eye Icon" width={15} />
+        <img src={generateIcon} alt="Generate Icon" width={15} />
       </Button>
       </IndexTable.Cell>
       <IndexTable.Cell>
         <ButtonGroup>
-          <Button type="button">
-            Delete
-          </Button>
+        <Button type="button" onClick={() => handleDelete(feedName)}>
+              Delete
+        </Button>
         </ButtonGroup>
       </IndexTable.Cell>
     </IndexTable.Row>
@@ -251,8 +276,8 @@ export default function Index() {
             { title: "No" },
             { title: "Name" },
             { title: "Feed Url" },
-            { title: "View Feed" },
-            { title: "Actions" },
+            { title: "Generate Feed" },
+            { title: "Delete" },
           ]}
           selectable={false}
         >
