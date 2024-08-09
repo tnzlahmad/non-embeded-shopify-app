@@ -187,7 +187,7 @@ export default function Index() {
         },
         body: JSON.stringify({
           feedName,
-          productFeedURL: xmlFilename,
+          productFeedURL: saveResult.url, 
         }),
       });
   
@@ -214,10 +214,13 @@ export default function Index() {
       <IndexTable.Cell>
         {productFeedURL ? (
           <a
-            href={`/xml-folder/${productFeedURL}`}
+            href={productFeedURL}
             target="_blank"
+            rel="noopener noreferrer"
           >
-            {productFeedURL}
+            {productFeedURL.length > 30
+              ? `${productFeedURL.slice(0, 30)}...`
+              : productFeedURL}
           </a>
         ) : (
           'No Product Feed URL'
