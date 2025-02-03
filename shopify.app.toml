@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "359bf999163b1207fdadef1b92fbf132"
-application_url = "https://charity-citizens-cattle-jesus.trycloudflare.com"
+application_url = "https://y-mocha-omega.vercel.app/"
 embedded = true
 name = "xml-feed-gerator-app"
 handle = "xml-feed-gerator-app"
@@ -24,9 +24,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://charity-citizens-cattle-jesus.trycloudflare.com/auth/callback",
-  "https://charity-citizens-cattle-jesus.trycloudflare.com/auth/shopify/callback",
-  "https://charity-citizens-cattle-jesus.trycloudflare.com/api/auth/callback"
+  "https://y-mocha-omega.vercel.app//auth/callback",
+  "https://y-mocha-omega.vercel.app//auth/shopify/callback",
+  "https://y-mocha-omega.vercel.app//api/auth/callback"
 ]
 
 [pos]
