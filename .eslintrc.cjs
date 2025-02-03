@@ -8,6 +8,9 @@ module.exports = {
     "prettier",
   ],
   globals: {
-    shopify: "readonly"
+    shopify: "readonly",
+  },
+  rules: {
+    "no-with": "error",
   },
 };

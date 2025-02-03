@@ -1,31 +1,33 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "07126dab06b8eb1c517280bade6da22e"
-name = "xml"
-handle = "xml-7"
-application_url = "https://non-embeded-shopify-app-ibrahim.vercel.app"
-embedded = false
+client_id = "359bf999163b1207fdadef1b92fbf132"
+application_url = "https://charity-citizens-cattle-jesus.trycloudflare.com"
+embedded = true
+name = "xml-feed-gerator-app"
+handle = "xml-feed-gerator-app"
 
 [build]
 automatically_update_urls_on_dev = true
-dev_store_url = "building-storee.myshopify.com"
+dev_store_url = "xml-feed-generator.myshopify.com"
+include_config_on_deploy = true
+
+[webhooks]
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products"
+scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://non-embeded-shopify-app-ibrahim.vercel.app/auth/callback",
-  "https://non-embeded-shopify-app-ibrahim.vercel.app/auth/shopify/callback",
-  "https://non-embeded-shopify-app-ibrahim.vercel.app/api/auth/callback"
+  "https://charity-citizens-cattle-jesus.trycloudflare.com/auth/callback",
+  "https://charity-citizens-cattle-jesus.trycloudflare.com/auth/shopify/callback",
+  "https://charity-citizens-cattle-jesus.trycloudflare.com/api/auth/callback"
 ]
 
-[webhooks]
-api_version = "2024-07"
-
 [pos]
-embedded = false
-
-[app_preferences]
-url = "https://non-embeded-shopify-app-ibrahim.vercel.app/"
+embedded = true

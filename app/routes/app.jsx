@@ -5,6 +5,9 @@ import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { NavMenu } from "@shopify/app-bridge-react";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 import { authenticate } from "../shopify.server";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
@@ -19,10 +22,12 @@ export default function App() {
   const { apiKey } = useLoaderData();
 
   return (
-    <AppProvider isEmbeddedApp={false} apiKey={apiKey}>
+    <AppProvider apiKey={apiKey}>
       {showNavMenu && (
         <NavMenu>
-          <Link to="/app" rel="home">Dashboard</Link>
+          <Link to="/app" rel="home">
+            Dashboard
+          </Link>
           <Link to="/app/changePlan">Change Plan</Link>
           <Link to="/app/productFeed">Add A Product Feed</Link>
           <Link to="/app/editSettings">Edit Settings</Link>
