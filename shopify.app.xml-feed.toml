@@ -1,0 +1,31 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "07126dab06b8eb1c517280bade6da22e"
+name = "xml"
+handle = "xml-7"
+application_url = "https://ping-jungle-ranging-tune.trycloudflare.com"
+embedded = false
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "building-storee.myshopify.com"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_products"
+
+[auth]
+redirect_urls = [
+  "https://ping-jungle-ranging-tune.trycloudflare.com/auth/callback",
+  "https://ping-jungle-ranging-tune.trycloudflare.com/auth/shopify/callback",
+  "https://ping-jungle-ranging-tune.trycloudflare.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-07"
+
+[pos]
+embedded = false
+
+[app_preferences]
+url = "https://non-embeded-shopify-app-ibrahim.vercel.app/"

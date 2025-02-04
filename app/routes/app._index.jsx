@@ -1,333 +1,373 @@
-import dotenv from 'dotenv';
-dotenv.config();
-import { useEffect } from "react";
+// import dotenv from "dotenv";
+// dotenv.config();
+import { useEffect, useState } from "react";
 import { json } from "@remix-run/node";
-import { useFetcher } from "@remix-run/react";
-import {
-  Page,
-  Layout,
-  Text,
-  Card,
-  Button,
-  BlockStack,
-  Box,
-  List,
-  Link,
-  InlineStack,
-} from "@shopify/polaris";
-import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
+import { useFetcher, useLoaderData, useSubmit } from "@remix-run/react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Page, Button, IndexTable, ButtonGroup } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
+import {
+  saveProducts,
+  upsertImages,
+  upsertOptions,
+  upsertVariants,
+  upsertCollects,
+  upsertCollections,
+} from "../utitls/product.server";
+import { ProductCatalog, FAQsComponent, Header } from "./components";
+import prisma from "../db.server";
+import generateIcon from "../assets/image/generate.icon.svg";
+import { parse } from "js2xmlparser";
 
-export const loader = async ({ request }) => {
-  await authenticate.admin(request);
-
-  return null;
-};
+// Data Get From Database + Live
+export async function loader({ request }) {
+  const { admin, session } = await authenticate.admin(request);
+  const data = await admin.rest.resources.Product.all({ session });
+  const shopName = session.shop;
+  const productFeedsData = await prisma.productFeed.findMany();
+  const productData = await prisma.product.findMany();
+  const collecData = await prisma.collect.findMany();
+  const collectionData = await prisma.collections.findMany();
+  const variants = await prisma.variants.findMany();
+  const options = await prisma.options.findMany();
+  const images = await prisma.images.findMany();
+  return json({
+    shopName,
+    productFeedsData,
+    data,
+    productData,
+    collecData,
+    collectionData,
+    variants,
+    options,
+    images,
+  });
+}
 
 export const action = async ({ request }) => {
-  const { admin } = await authenticate.admin(request);
-  const color = ["Red", "Orange", "Yellow", "Green"][
-    Math.floor(Math.random() * 4)
-  ];
-  const response = await admin.graphql(
-    `#graphql
-      mutation populateProduct($input: ProductInput!) {
-        productCreate(input: $input) {
-          product {
-            id
-            title
-            handle
-            status
-            variants(first: 10) {
-              edges {
-                node {
-                  id
-                  price
-                  barcode
-                  createdAt
-                }
-              }
-            }
-          }
-        }
-      }`,
-    {
-      variables: {
-        input: {
-          title: `${color} Snowboard`,
-        },
-      },
-    },
-  );
-  const responseJson = await response.json();
-  const variantId =
-    responseJson.data.productCreate.product.variants.edges[0].node.id;
-  const variantResponse = await admin.graphql(
-    `#graphql
-      mutation shopifyRemixTemplateUpdateVariant($input: ProductVariantInput!) {
-        productVariantUpdate(input: $input) {
-          productVariant {
-            id
-            price
-            barcode
-            createdAt
-          }
-        }
-      }`,
-    {
-      variables: {
-        input: {
-          id: variantId,
-          price: Math.random() * 100,
-        },
-      },
-    },
-  );
-  const variantResponseJson = await variantResponse.json();
+  const formData = await request.formData();
+  const actionType = formData.get("actionType");
 
-  return json({
-    product: responseJson.data.productCreate.product,
-    variant: variantResponseJson.data.productVariantUpdate.productVariant,
-  });
+  if (actionType === "syncProducts") {
+    return await syncProducts(request);
+  }
+
+  return json({ error: "Invalid action type" }, { status: 400 });
 };
 
-export default function Index() {
-  const fetcher = useFetcher();
-  const shopify = useAppBridge();
-  const isLoading =
-    ["loading", "submitting"].includes(fetcher.state) &&
-    fetcher.formMethod === "POST";
-  const productId = fetcher.data?.product?.id.replace(
-    "gid://shopify/Product/",
-    "",
-  );
+// Product Sync
+async function syncProducts(request) {
+  try {
+    const { admin, session } = await authenticate.admin(request);
+    const shopName = session.shop;
+    const [productResponse, collectResponse, collectionResponse] =
+      await Promise.all([
+        admin.rest.resources.Product.all({ session }),
+        admin.rest.resources.Collect.all({ session }),
+        admin.rest.resources.CustomCollection.all({ session }),
+      ]);
 
-  useEffect(() => {
-    if (productId) {
-      shopify.toast.show("Product created");
+    const productData = productResponse.data || [];
+    const collectData = collectResponse.data || [];
+    const collectionData = collectionResponse.data || [];
+
+    const imagesData = productData.flatMap((product) => product.images || []);
+    const optionsData = productData.flatMap((product) => product.options || []);
+    const variantsData = productData.flatMap(
+      (product) => product.variants || [],
+    );
+
+    await Promise.all([
+      saveProducts(productData, shopName),
+      upsertImages(imagesData),
+      upsertOptions(optionsData),
+      upsertVariants(variantsData),
+      upsertCollects(collectData),
+      upsertCollections(collectionData),
+    ]);
+
+    return { success: true, message: "Sync completed successfully" };
+  } catch (error) {
+    console.error("Error syncing products:", error);
+    return {
+      success: false,
+      message: "Error syncing products",
+      error: error.message,
+    };
+  }
+}
+
+// Generate XML Function
+async function generateXML(products) {
+  try {
+    const xml = parse("Products", { Product: products });
+    return xml;
+  } catch (error) {
+    console.error("Error generating XML:", error);
+    throw error;
+  }
+}
+
+export default function Index() {
+  const itemsPerPage = 5;
+  const {
+    shopName,
+    productFeedsData,
+    productData,
+    collecData,
+    collectionData,
+    variants,
+    options,
+    images,
+  } = useLoaderData();
+  const [currentPage, setCurrentPage] = useState(1);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const filteredProductFeeds = productFeedsData.filter(
+    (item) => item.shopName === shopName,
+  );
+  const currentItems = filteredProductFeeds.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredProductFeeds.length / itemsPerPage);
+
+  const handleDelete = async (feedName) => {
+    try {
+      const response = await fetch("/delete-feed", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ actionType: "deleteFeed", feedName }),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        alert("Product feed deleted successfully");
+        window.location.reload();
+      } else {
+        alert(result.message || "Failed to delete product feed");
+      }
+    } catch (error) {
+      console.error("Error deleting product feed:", error);
+      alert("Failed to delete product feed");
     }
-  }, [productId, shopify]);
-  const generateProduct = () => fetcher.submit({}, { method: "POST" });
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  const submit = useSubmit();
+  const handleSync = () => {
+    const formData = new FormData();
+    formData.append("actionType", "syncProducts");
+    submit(formData, { method: "post" });
+  };
+
+  async function handleXML(feedName, shopName) {
+    console.log("handleXML", productData);
+    if (!productData?.length) {
+      alert("No data found in the database");
+      return;
+    }
+
+    const sanitizeFeedName = (name) =>
+      typeof name === "string" ? name.replace(/\s+/g, "") : "defaultFeedName";
+
+    const createFilename = (feedName) => {
+      return `${new Date().toISOString().replace(/[-:.T]/g, "")}_${sanitizeFeedName(feedName)}.xml`;
+    };
+
+    const getProductDetails = (productId) => {
+      const productImages = images.filter(
+        (image) => image.productId === productId,
+      );
+      const productOptions = options.filter(
+        (option) => option.productId === productId,
+      );
+      const productVariants = variants.filter(
+        (variant) => variant.productId === productId,
+      );
+
+      return {
+        images: productImages,
+        options: productOptions,
+        variants: productVariants,
+      };
+    };
+
+    const generateEnrichedProducts = () =>
+      productData
+        .filter((product) => product.shopName === shopName)
+        .map((product) => {
+          const { images, options, variants } = getProductDetails(
+            product.productId,
+          );
+
+          return {
+            ...product,
+            images,
+            options,
+            variants,
+            collections: collecData
+              .filter((collect) => collect.productId === product.productId)
+              .map((collect) => ({
+                collectData: { ...collect },
+                collectionDetails:
+                  collectionData.find(
+                    (col) => col.collectionId === collect.collectionId,
+                  ) || {},
+              })),
+          };
+        });
+
+    try {
+      const xml = await generateXML(generateEnrichedProducts());
+      const xmlFilename = createFilename(feedName);
+
+      const formData = new FormData();
+      formData.append("actionType", "saveXML");
+      formData.append("xmlData", xml);
+      formData.append("feedName", feedName);
+      formData.append("filename", xmlFilename);
+
+      const formDataEntries = Array.from(formData.entries());
+      console.log("FormData entries:-----------------", formDataEntries);
+
+      const saveResponse = await fetch("/save-xml", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!saveResponse.ok) {
+        // Log the error response for better debugging
+        const errorText = await saveResponse.text();
+        console.error("Error response from save-xml:0---------", errorText);
+        throw new Error("Failed to save XML file");
+      }
+
+      const saveResult = await saveResponse.json();
+      console.log("🚀 ~ handleXML ~ saveResult:--------", saveResult);
+
+      if (!saveResult.success) {
+        throw new Error(saveResult.error || "Failed to save XML file");
+      }
+
+      // Get the updated feed URL after saving the XML
+      const updatedFeedURL = saveResult.url;
+
+      // Log the URL to the console
+      console.log("Generated XML Feed URL:", updatedFeedURL);
+
+      const updateResponse = await fetch("/update-feed-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          feedName,
+          productFeedURL: updatedFeedURL,
+        }),
+      });
+
+      const updateResult = await updateResponse.json();
+
+      if (updateResult.success) {
+        alert("Product feed URL updated successfully");
+
+        // Refresh the row or the list after the update
+        // You can fetch the latest data or update the URL directly if possible
+        currentItems = currentItems.map((item) =>
+          item.feedName === feedName
+            ? { ...item, productFeedURL: updatedFeedURL }
+            : item,
+        );
+        window.location.reload();
+      } else {
+        throw new Error(
+          updateResult.error || "Failed to update product feed URL",
+        );
+      }
+    } catch (error) {
+      console.error("Error generating, saving, or updating XML:", error);
+      alert("Failed to save XML file or update feed URL");
+    }
+  }
+
+  // Generate rows for IndexTable
+  const rowMarkup = currentItems.map(
+    ({ id, feedName, productFeedURL }, index) => (
+      <IndexTable.Row id={id} key={id} position={index}>
+        <IndexTable.Cell>{index + 1}</IndexTable.Cell>
+        <IndexTable.Cell>{feedName}</IndexTable.Cell>
+        <IndexTable.Cell>
+          {productFeedURL ? (
+            <a href={productFeedURL} target="_blank" rel="noopener noreferrer">
+              {productFeedURL.length > 30
+                ? `${productFeedURL.slice(0, 30)}...`
+                : productFeedURL}
+            </a>
+          ) : (
+            "No Product Feed URL"
+          )}
+        </IndexTable.Cell>
+        <IndexTable.Cell>
+          <Button type="button" onClick={() => handleXML(feedName, shopName)}>
+            <img src={generateIcon} alt="Generate Icon" width={15} />
+          </Button>
+        </IndexTable.Cell>
+        <IndexTable.Cell>
+          <ButtonGroup>
+            <Button type="button" onClick={() => handleDelete(feedName)}>
+              Delete
+            </Button>
+          </ButtonGroup>
+        </IndexTable.Cell>
+      </IndexTable.Row>
+    ),
+  );
 
   return (
     <Page>
-      <TitleBar title="Remix app template">
-        <button variant="primary" onClick={generateProduct}>
-          Generate a product
-        </button>
-      </TitleBar>
-      <BlockStack gap="500">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <BlockStack gap="500">
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Congrats on creating a new Shopify app 🎉
-                  </Text>
-                  <Text variant="bodyMd" as="p">
-                    This embedded app template uses{" "}
-                    <Link
-                      url="https://shopify.dev/docs/apps/tools/app-bridge"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      App Bridge
-                    </Link>{" "}
-                    interface examples like an{" "}
-                    <Link url="/app/additional" removeUnderline>
-                      additional page in the app nav
-                    </Link>
-                    , as well as an{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      Admin GraphQL
-                    </Link>{" "}
-                    mutation demo, to provide a starting point for app
-                    development.
-                  </Text>
-                </BlockStack>
-                <BlockStack gap="200">
-                  <Text as="h3" variant="headingMd">
-                    Get started with products
-                  </Text>
-                  <Text as="p" variant="bodyMd">
-                    Generate a product with GraphQL and get the JSON output for
-                    that product. Learn more about the{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql/latest/mutations/productCreate"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      productCreate
-                    </Link>{" "}
-                    mutation in our API references.
-                  </Text>
-                </BlockStack>
-                <InlineStack gap="300">
-                  <Button loading={isLoading} onClick={generateProduct}>
-                    Generate a product
-                  </Button>
-                  {fetcher.data?.product && (
-                    <Button
-                      url={`shopify:admin/products/${productId}`}
-                      target="_blank"
-                      variant="plain"
-                    >
-                      View product
-                    </Button>
-                  )}
-                </InlineStack>
-                {fetcher.data?.product && (
-                  <>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productCreate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.product, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productVariantUpdate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.variant, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                  </>
-                )}
-              </BlockStack>
-            </Card>
-          </Layout.Section>
-          <Layout.Section variant="oneThird">
-            <BlockStack gap="500">
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    App template specs
-                  </Text>
-                  <BlockStack gap="200">
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Framework
-                      </Text>
-                      <Link
-                        url="https://remix.run"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Remix
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Database
-                      </Text>
-                      <Link
-                        url="https://www.prisma.io/"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Prisma
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Interface
-                      </Text>
-                      <span>
-                        <Link
-                          url="https://polaris.shopify.com"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          Polaris
-                        </Link>
-                        {", "}
-                        <Link
-                          url="https://shopify.dev/docs/apps/tools/app-bridge"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          App Bridge
-                        </Link>
-                      </span>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        API
-                      </Text>
-                      <Link
-                        url="https://shopify.dev/docs/api/admin-graphql"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphQL API
-                      </Link>
-                    </InlineStack>
-                  </BlockStack>
-                </BlockStack>
-              </Card>
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Next steps
-                  </Text>
-                  <List>
-                    <List.Item>
-                      Build an{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/getting-started/build-app-example"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        {" "}
-                        example app
-                      </Link>{" "}
-                      to get started
-                    </List.Item>
-                    <List.Item>
-                      Explore Shopify’s API with{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/tools/graphiql-admin-api"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphiQL
-                      </Link>
-                    </List.Item>
-                  </List>
-                </BlockStack>
-              </Card>
-            </BlockStack>
-          </Layout.Section>
-        </Layout>
-      </BlockStack>
+      <Header handleSync={handleSync} />
+      <div className="mt-4">
+        <IndexTable
+          itemCount={productFeedsData.length}
+          headings={[
+            { title: "No" },
+            { title: "Name" },
+            { title: "Feed Url" },
+            { title: "Generate Feed" },
+            { title: "Delete" },
+          ]}
+          selectable={false}
+        >
+          {rowMarkup}
+        </IndexTable>
+      </div>
+
+      <div className="polaris-btn mt-3 d-flex justify-content-center">
+        <ButtonGroup segmented>
+          <Button
+            primary
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous Page
+          </Button>
+          <span className="space-page">
+            {currentPage} / {totalPages}
+          </span>
+          <Button
+            primary
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next Page
+          </Button>
+        </ButtonGroup>
+      </div>
+      <ProductCatalog />
+      <FAQsComponent />
     </Page>
   );
 }

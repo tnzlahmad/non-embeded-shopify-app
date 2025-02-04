@@ -14,7 +14,7 @@ if (
   delete process.env.HOST;
 }
 
-const host = new URL(process.env.SHOPIFY_APP_URL || "http://localhost")
+const host = new URL(process.env.SHOPIFY_APP_URL || "https://b7e5-202-47-42-110.ngrok-free.app")
   .hostname;
 let hmrConfig;
 
@@ -39,8 +39,11 @@ export default defineConfig({
     port: Number(process.env.PORT || 3000),
     hmr: hmrConfig,
     fs: {
-      // See https://vitejs.dev/config/server-options.html#server-fs-allow for more information
-      allow: ["app", "node_modules"],
+      allow: [
+        'public',
+        'app',
+        'node_modules'
+      ],
     },
   },
   plugins: [

@@ -1,81 +1,125 @@
-import {
-  Box,
-  Card,
-  Layout,
-  Link,
-  List,
-  Page,
-  Text,
-  BlockStack,
-} from "@shopify/polaris";
-import { TitleBar } from "@shopify/app-bridge-react";
+import shopify from "../shopify.server";
+import { json } from "@remix-run/node";
+import { useLoaderData, useFetcher } from "@remix-run/react";
+import { IndexTable, ButtonGroup, Button, Page } from "@shopify/polaris";
+import { useState } from "react";
+import { Header } from "./components";
+import prisma from "../db.server";
 
-export default function ProductPage() {
-  return (
-    <Page>
-      <TitleBar title="Product page" />
-      <Layout>
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="300">
-              <Text as="p" variant="bodyMd">
-                Product{" "}
-                <Link
-                  url="https://shopify.dev/docs/apps/tools/app-bridge"
-                  target="_blank"
-                  removeUnderline
-                >
-                  App Bridge
-                </Link>
-                .
-              </Text>
-              <Text as="p" variant="bodyMd">
-                To create your own page and have it show up in the app
-                navigation, add a page inside <Code>app/routes</Code>, and a
-                link to it in the <Code>&lt;NavMenu&gt;</Code> component found
-                in <Code>app/routes/app.jsx</Code>.
-              </Text>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-        <Layout.Section variant="oneThird">
-          <Card>
-            <BlockStack gap="200">
-              <Text as="h2" variant="headingMd">
-                Resources
-              </Text>
-              <List>
-                <List.Item>
-                  <Link
-                    url="https://shopify.dev/docs/apps/design-guidelines/navigation#app-nav"
-                    target="_blank"
-                    removeUnderline
-                  >
-                    App nav best practices
-                  </Link>
-                </List.Item>
-              </List>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-      </Layout>
-    </Page>
-  );
+export async function loader({ request }) {
+  const { admin, session } = await shopify.authenticate.admin(request);
+  console.log("shopify", shopify);
+  console.log("session", session.sh);
+  console.log("armughan", "armughan");
+  const data = await admin.rest.resources.Product.all({ session });
+  return json(data);
 }
 
-function Code({ children }) {
+export const action = async ({ request }) => {
+  const formData = await request.formData();
+  const productId = formData.get("productId");
+  const productTitle = formData.get("productTitle");
+  const productImage = formData.get("productImage");
+
+  try {
+    const existingProduct = await prisma.product.findUnique({
+      where: {
+        productId: productId,
+      },
+    });
+
+    if (existingProduct) {
+      return json({
+        success: false,
+        error: `Product ${productId} already exists.`,
+      });
+    }
+
+    const createdProduct = await prisma.product.create({
+      data: {
+        productId: productId,
+        productTitle: productTitle,
+        productImage: productImage,
+      },
+    });
+
+    return json({ success: true, product: createdProduct });
+  } catch (error) {
+    console.error("Error saving product:", error);
+    return json({ success: false, error: error.message });
+  }
+};
+
+export default function rest() {
+  const { data } = useLoaderData();
+  const fetcher = useFetcher();
+  const itemsPerPage = 5;
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+
+  const currentItems = data.slice(startIndex, endIndex);
+
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  const rowMarkup = currentItems.map(({ image, id, title }, index) => (
+    <IndexTable.Row id={id} key={id} position={index}>
+      <IndexTable.Cell>
+        <img height={"40px"} src={image.src} alt="Product" />
+      </IndexTable.Cell>
+      <IndexTable.Cell>{id}</IndexTable.Cell>
+      <IndexTable.Cell>{title}</IndexTable.Cell>
+      <IndexTable.Cell>
+        <fetcher.Form method="post">
+          <input type="hidden" name="productId" value={id} />
+          <input type="hidden" name="productTitle" value={title} />
+          <input type="hidden" name="productImage" value={image.src} />
+          <Button submit primary>
+            Save
+          </Button>
+        </fetcher.Form>
+      </IndexTable.Cell>
+    </IndexTable.Row>
+  ));
+
   return (
-    <Box
-      as="span"
-      padding="025"
-      paddingInlineStart="100"
-      paddingInlineEnd="100"
-      background="bg-surface-active"
-      borderWidth="025"
-      borderColor="border"
-      borderRadius="100"
-    >
-      <code>{children}</code>
-    </Box>
+    <>
+      <Page>
+        <Header />
+
+        <IndexTable
+          itemCount={data.length}
+          headings={[{ title: "Image" }, { title: "Id" }, { title: "Title" }]}
+          selectable={false}
+        >
+          {rowMarkup}
+        </IndexTable>
+        <div className="polaris-btn d-flex justify-content-center mt-3">
+          <ButtonGroup segmented>
+            <Button
+              primary
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous Page
+            </Button>
+            <span className="space-page">{currentPage} </span>
+            <span> / </span> <span className="space-page">{totalPages}</span>
+            <Button
+              primary
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next Page
+            </Button>
+          </ButtonGroup>
+        </div>
+      </Page>
+    </>
   );
 }

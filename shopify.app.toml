@@ -1,15 +1,22 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "9919b51e77d2a3a0ec4dca560cd82e06"
-name = "non-embeded-app"
-handle = "non-embeded-app"
-application_url = "https://surrounding-darkness-portugal-closing.trycloudflare.com"
-embedded = false
+client_id = "359bf999163b1207fdadef1b92fbf132"
+application_url = "https://y-mocha-omega.vercel.app/"
+embedded = true
+name = "xml-feed-gerator-app"
+handle = "xml-feed-gerator-app"
 
 [build]
 automatically_update_urls_on_dev = true
-dev_store_url = "armughan00.myshopify.com"
+dev_store_url = "xml-feed-generator.myshopify.com"
 include_config_on_deploy = true
+
+[webhooks]
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
@@ -17,17 +24,10 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://surrounding-darkness-portugal-closing.trycloudflare.com/auth/callback",
-  "https://surrounding-darkness-portugal-closing.trycloudflare.com/auth/shopify/callback",
-  "https://surrounding-darkness-portugal-closing.trycloudflare.com/api/auth/callback"
+  "https://y-mocha-omega.vercel.app//auth/callback",
+  "https://y-mocha-omega.vercel.app//auth/shopify/callback",
+  "https://y-mocha-omega.vercel.app//api/auth/callback"
 ]
 
-[webhooks]
-api_version = "2024-07"
-
-  [[webhooks.subscriptions]]
-  topics = [ "app/uninstalled" ]
-  uri = "/webhooks"
-
 [pos]
-embedded = false
+embedded = true
